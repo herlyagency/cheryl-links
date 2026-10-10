@@ -1,7 +1,5 @@
 name: Sync follower counts
 on:
-  schedule:
-    - cron: '0 12 * * *'
   workflow_dispatch:
 permissions:
   contents: read

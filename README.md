@@ -175,9 +175,9 @@ Selecting a mood applies its colors, typography and layout to the draft and live
 
 YouTube video URLs automatically use a video thumbnail, including watch, youtu.be, Shorts, live and embed URLs. A manual thumbnail takes priority. Featured cards display the image at a larger size. Failed images fall back to the platform icon or decorative artwork. Channel and playlist URLs do not identify an individual video. Instagram profiles/posts use a manual upload or image URL; automatic Instagram metadata retrieval is not implemented.
 
-## Follower sync and Open Graph previews (PR setup)
+## Optional legacy follower sync and Open Graph setup
 
-After merging this patch:
+The current interface uses manual follower counts (see below). These server integrations remain available for a future return to automatic syncing.
 
 1. Run `supabase/migrations/006_followers.sql` once in the Supabase SQL Editor. It adds the private follower cache, public aggregate RPC, and validates the new look/motion settings while allowing older drafts.
 2. Deploy both owner-protected functions from the repository:
@@ -195,8 +195,8 @@ After merging this patch:
    ]
    ```
    Only include accounts whose credentials are ready. YouTube uses the Data API channel statistics; its subscriber count is rounded by YouTube. Instagram uses a professional account and Facebook Graph API v24.0 `followers_count`, with an appropriately authorized account token. TikTok requires the user's approved `user.info.stats` scope. Personal Instagram profiles and arbitrary public TikTok handles cannot be synced by this implementation. This PR does not create developer apps, request platform approvals, implement OAuth connection screens, or refresh expiring access tokens. Renew expiring tokens in Supabase secrets. Do not paste API credentials in GitHub code or frontend variables.
-4. Generate a separate secret with `openssl rand -hex 32`. Set **the same value** as `FOLLOWER_SYNC_SECRET` in Supabase Edge Function secrets and GitHub **Actions → Secrets**. The daily `Sync follower counts` workflow runs at 12:00 UTC. Without this secret it skips collection. Scheduled runs can be delayed by GitHub; run it manually for an immediate refresh.
-5. Open **Admin → Appearance → Total followers → Sync followers now**. The public total combines successful cached account counts; it is not a deduplicated audience. Missing credentials show no fabricated total, while failed connections preserve the last known count and show their status privately. An owner sync within five minutes returns the cached result. Removing an account from the secret removes it from the cache at the next sync.
+4. Generate a separate secret with `openssl rand -hex 32`. Set **the same value** as `FOLLOWER_SYNC_SECRET` in Supabase Edge Function secrets and GitHub **Actions → Secrets**. The legacy `Sync follower counts` workflow supports manual runs only. Without this secret it skips collection. Its results are separate from the manually entered totals currently shown on the site.
+5. The current interface does not invoke automatic syncing or display its cached total. The legacy GitHub workflow can be run manually if credentials are configured; it no longer has a daily schedule.
 
 WithRose, Vimeo, Instagram, and TikTok use direct Open Graph extraction with validated redirects, a timeout, and a 256 KB HTML cap. Other public web links use the metadata service described below. YouTube video thumbnails also work directly. Manual images take priority; changing the destination clears only previously fetched previews. Login-walled or bot-blocked pages can return no image. Public visitors load saved images, not the preview endpoint.
 
@@ -206,3 +206,6 @@ API references: [YouTube channel statistics](https://developers.google.com/youtu
 
 ### Default rich link previews
 Every public HTTP/HTTPS link requests a rich preview automatically in the link editor, preserving custom thumbnails and existing copy. Non-featured links with images display a large preview image. Email links and pages without usable metadata retain their icon. Trusted publishers are fetched directly; other sites use Microlink's metadata API (https://microlink.io/docs/api/getting-started/overview). The free endpoint is limited to 25 requests/day, and sends the destination URL to Microlink. Results are saved with the draft, so public visitors do not trigger metadata requests. Preview errors retain a manual image option.
+
+## Manual follower counts (current mode)
+In Admin → My links → Social icons, click Add icon. Enter the platform, account URL, and current follower/subscriber count (0 for email or other links without followers). Existing icons have editable follower fields. The combined total appears beneath the public icons and updates in the draft preview immediately; save and publish to update the live page. Only visible icons contribute. Missing counts are excluded, and zero is a valid count. Migration 007 validates counts in saved configurations. No API credentials are needed in this mode. The previous sync workflow is now manual-only; automatic account syncing is dormant.

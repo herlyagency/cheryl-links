@@ -40,6 +40,7 @@ import {
   applyMood,
   automaticThumbnail,
   previewSupported,
+  socialFollowerTotal,
   safeUrl,
   rangeDates,
   csv,
@@ -196,7 +197,7 @@ function ImageField({ label, value, onChange, notify }) {
     </div>
   );
 }
-import { fetchLinkPreview, syncFollowers, loadFollowers } from "./api";
+import { fetchLinkPreview } from "./api";
 
 function LinkEditor({ site, setSite, notify }) {
   const previewRequests = useRef(new Set());
@@ -564,6 +565,14 @@ function toLocal(value) {
     .slice(0, 16);
 }
 function SocialEditor({ site, setSite }) {
+  const [adding, setAdding] = useState(false);
+  const [account, setAccount] = useState({
+    icon: "instagram",
+    url: "https://instagram.com/",
+    followers: "",
+  });
+  const total = socialFollowerTotal(site.socials);
+
   function change(id, p) {
     setSite((s) => ({
       ...s,
@@ -576,25 +585,113 @@ function SocialEditor({ site, setSite }) {
         <h3>Social icons</h3>
         <button
           className="button"
-          onClick={() =>
+          onClick={() => {
+            setAccount({
+              icon: "instagram",
+              url: "https://instagram.com/",
+              followers: "",
+            });
+            setAdding(true);
+          }}
+        >
+          <Plus size={14} />
+          Add icon
+        </button>
+      </div>
+      <p className="muted small">
+        Enter the current followers or subscribers for each account. Visible
+        icons contribute to the total; counts update when you edit them and
+        publish.
+      </p>
+      {adding && (
+        <form
+          className="new-social-account"
+          aria-label="Add social account"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!safeUrl(account.url)) return;
+            const followers = Number(account.followers);
+            if (
+              account.followers === "" ||
+              !Number.isSafeInteger(followers) ||
+              followers < 0 ||
+              followers > 1000000000000
+            )
+              return;
             setSite((s) => ({
               ...s,
               socials: [
                 ...s.socials,
                 {
                   id: crypto.randomUUID(),
-                  icon: "instagram",
-                  url: "https://instagram.com/",
+                  icon: account.icon,
+                  url: account.url,
                   active: true,
+                  followers,
                 },
               ],
-            }))
-          }
+            }));
+            setAdding(false);
+          }}
         >
-          <Plus size={14} />
-          Add icon
-        </button>
-      </div>
+          <h4>Add an account</h4>
+          <label>
+            Platform
+            <select
+              value={account.icon}
+              onChange={(e) =>
+                setAccount((a) => ({ ...a, icon: e.target.value }))
+              }
+            >
+              {Object.keys(icons).map((k) => (
+                <option key={k}>{k}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Account URL
+            <input
+              required
+              value={account.url}
+              onChange={(e) =>
+                setAccount((a) => ({ ...a, url: e.target.value }))
+              }
+            />
+          </label>
+          <label>
+            Current followers
+            <input
+              autoFocus
+              required
+              type="number"
+              min="0"
+              max="1000000000000"
+              step="1"
+              placeholder="Enter 0 for an account without followers"
+              value={account.followers}
+              onChange={(e) =>
+                setAccount((a) => ({ ...a, followers: e.target.value }))
+              }
+            />
+          </label>
+          <div className="link-actions">
+            <button
+              className="button"
+              type="submit"
+              disabled={!safeUrl(account.url)}
+            >
+              Add account
+            </button>
+            <button
+              className="button"
+              type="button"
+              onClick={() => setAdding(false)}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
       {site.socials.map((s, i) => (
         <div className="social-editor" key={s.id}>
           <select
@@ -611,6 +708,24 @@ function SocialEditor({ site, setSite }) {
             value={s.url}
             onChange={(e) => change(s.id, { url: e.target.value })}
           />
+          <label className="social-followers">
+            Followers
+            <input
+              aria-label={`Followers for ${s.icon} account ${i + 1}`}
+              type="number"
+              min="0"
+              max="1000000000000"
+              step="1"
+              placeholder="Not entered"
+              value={s.followers ?? ""}
+              onChange={(e) =>
+                change(s.id, {
+                  followers:
+                    e.target.value === "" ? null : Number(e.target.value),
+                })
+              }
+            />
+          </label>
           <input
             type="checkbox"
             aria-label="Show social icon"
@@ -645,64 +760,13 @@ function SocialEditor({ site, setSite }) {
           </button>
         </div>
       ))}
-    </section>
-  );
-}
-function FollowerConnections({ notify }) {
-  const [report, setReport] = useState(null),
-    [busy, setBusy] = useState(false),
-    [error, setError] = useState("");
-  const sync = async () => {
-    setBusy(true);
-    try {
-      setReport(await syncFollowers());
-      setError("");
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBusy(false);
-    }
-  };
-  useEffect(() => {
-    loadFollowers()
-      .then(setReport)
-      .catch((e) => setError(e.message));
-  }, []);
-  return (
-    <section className="panel">
-      <h3>Total followers</h3>
-      <p className="muted small">
-        Combined followers and subscribers from connected accounts. Updated
-        automatically each day after setup; this is a combined count, not a
-        unique audience.
+      <p className="manual-follower-summary">
+        <strong>
+          {total == null
+            ? "No counts entered"
+            : `${total.toLocaleString("en")} total followers`}
+        </strong>
       </p>
-      <button className="button" onClick={sync} disabled={busy}>
-        {busy ? "Syncing…" : "Sync followers now"}
-      </button>
-      {error && (
-        <p className="error" role="alert">
-          {error}
-        </p>
-      )}
-      {report?.accounts?.length ? (
-        report.accounts.map((account) => (
-          <p key={account.account} className="small">
-            {account.label || account.platform}:{" "}
-            {account.count != null
-              ? account.count.toLocaleString()
-              : "Not synced"}{" "}
-            · {account.status}
-            {account.updated_at
-              ? ` · ${new Date(account.updated_at).toLocaleString()}`
-              : ""}
-          </p>
-        ))
-      ) : (
-        <p className="muted small">
-          No accounts connected. Add platform API credentials in Supabase Edge
-          Function secrets; setup instructions are in the README.
-        </p>
-      )}
     </section>
   );
 }
@@ -757,7 +821,6 @@ function Appearance({ site, setSite, notify }) {
           ))}
         </div>
       </section>
-      <FollowerConnections notify={notify} />
       <section className="panel">
         <h3>Profile</h3>
         <ImageField

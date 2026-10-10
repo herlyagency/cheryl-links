@@ -22,6 +22,7 @@ test("Postgres migrations enforce private drafts, atomic publishing, schedules a
       "004_seed.sql",
       "005_function_permissions.sql",
       "006_followers.sql",
+      "007_manual_followers.sql",
     ])
       await pg.exec(
         await readFile(
@@ -105,6 +106,8 @@ test("Postgres migrations enforce private drafts, atomic publishing, schedules a
     );
     await pg.query("select public.publish_site()");
     const config = structuredClone(sample);
+    config.socials[0].followers = 1200;
+    config.socials[1].followers = 3400;
     config.links[0].active = false;
     config.links[1].start = "2099-01-01T00:00:00Z";
     config.links[2].end = "2000-01-01T00:00:00Z";
@@ -127,6 +130,21 @@ test("Postgres migrations enforce private drafts, atomic publishing, schedules a
     await pg.exec(
       `reset role; set request.jwt.claim.sub='${owner}'; set role authenticated;`,
     );
+    assert.equal(
+      (await pg.query("select public.get_public_site() as site")).rows[0].site
+        .socials[0].followers,
+      1200,
+    );
+    for (const followers of [-1, 1.5, "123", 1000000000001]) {
+      const invalid = structuredClone(config);
+      invalid.socials[0].followers = followers;
+      await assert.rejects(
+        pg.query("update public.site_drafts set config=$1 where id=1", [
+          JSON.stringify(invalid),
+        ]),
+        /check constraint/,
+      );
+    }
     config.links[0].url = "javascript:alert(1)";
     await assert.rejects(
       pg.query("update public.site_drafts set config=$1 where id=1", [

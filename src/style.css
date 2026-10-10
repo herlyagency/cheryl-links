@@ -1654,3 +1654,35 @@ summary {
   height: 100%;
   object-fit: cover;
 }
+
+.new-social-account {
+  padding: 18px;
+  margin-bottom: 18px;
+  border: 1px solid #dedbd4;
+  border-radius: 12px;
+}
+.new-social-account label {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.social-followers {
+  display: grid;
+  gap: 4px;
+  font-size: 11px;
+  width: 110px;
+  flex-shrink: 0;
+}
+.social-followers input {
+  width: 100%;
+  min-width: 0;
+}
+.manual-follower-summary {
+  margin-top: 16px;
+}
+@media (max-width: 700px) {
+  .social-editor .social-followers {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+}
