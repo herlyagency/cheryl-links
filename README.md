@@ -167,3 +167,10 @@ Before making the domain public:
 - Verify the HTTPS certificate, canonical hostname, static sharing preview, image sizes, and Lighthouse in your production environment. No Lighthouse score or real-device compatibility result is claimed before those checks.
 
 Export site settings from **Share & tools** and analytics CSV from **Analytics**. Keep backups of SQL/source and public content. Check Supabase activity, Cron results, bucket size, and event storage periodically. Rotate collector secrets only through the secret manager; old signed sessions then stop working until refresh. Keep your dependency lockfile and review provider/library updates before deploying them.
+
+
+## Appearance and link thumbnails
+
+Selecting a mood applies its colors, typography and layout to the draft and live preview. Custom link styles are cleared by default so cards follow the mood; turn on **Keep custom link styles** to preserve them. Content, visibility, schedules and thumbnails remain unchanged. Save the draft or publish to persist the appearance.
+
+YouTube video URLs automatically use a video thumbnail, including watch, youtu.be, Shorts, live and embed URLs. A manual thumbnail takes priority. Featured cards display the image at a larger size. Failed images fall back to the platform icon or decorative artwork. Channel and playlist URLs do not identify an individual video. Instagram profiles/posts use a manual upload or image URL; automatic Instagram metadata retrieval is not implemented.
