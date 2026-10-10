@@ -3,9 +3,9 @@ import { Heart, Share2, Check, ArrowUpRight } from "lucide-react";
 import { safeUrl, visible, linkThumbnail, socialFollowerTotal } from "./model";
 import { enabled, optedIn, consent, startTracking, track } from "./analytics";
 import { SocialIcon as Icon } from "./social-icons";
-import { platformLabels as icons } from "./social-platforms";
+import { platformLabels as icons, resolvePlatform } from "./social-platforms";
 
-function LinkImage({ src, icon, hero = false }) {
+function LinkImage({ src, icon, url, hero = false }) {
   const [failed, setFailed] = useState(false);
   if (failed || !src)
     return hero ? (
@@ -17,7 +17,7 @@ function LinkImage({ src, icon, hero = false }) {
         </span>
       </div>
     ) : (
-      <Icon name={icon} />
+      <Icon name={icon} url={url} />
     );
   return (
     <img
@@ -181,10 +181,10 @@ function PublicPage({ site, preview = false }) {
                   href={safeUrl(s.url)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label={icons[s.icon] || s.icon}
+                  aria-label={icons[resolvePlatform(s.icon, s.url)]}
                   onClick={() => !preview && track("link_click", s.id)}
                 >
-                  <Icon name={s.icon} size={19} />
+                  <Icon name={s.icon} url={s.url} size={19} />
                 </a>
               ))}
           </div>
@@ -228,7 +228,11 @@ function PublicPage({ site, preview = false }) {
               >
                 {!l.featured && linkThumbnail(l) && (
                   <div className="rich-preview-image">
-                    <LinkImage src={linkThumbnail(l)} icon={l.icon} />
+                    <LinkImage
+                      src={linkThumbnail(l)}
+                      icon={l.icon}
+                      url={l.url}
+                    />
                   </div>
                 )}
                 {l.featured && (
@@ -242,6 +246,7 @@ function PublicPage({ site, preview = false }) {
                       key={linkThumbnail(l)}
                       src={linkThumbnail(l)}
                       icon={l.icon}
+                      url={l.url}
                     />
                   </span>
                   <span className="card-copy">
@@ -256,6 +261,7 @@ function PublicPage({ site, preview = false }) {
                       key={linkThumbnail(l)}
                       src={linkThumbnail(l)}
                       icon={l.icon}
+                      url={l.url}
                       hero
                     />
                   ) : (

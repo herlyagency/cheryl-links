@@ -249,3 +249,53 @@ test("new social platforms preserve follower totals and validate", async () => {
   site.socials[0].icon = "unknown";
   assert.throws(() => validateSite(site), /supported/);
 });
+
+test("automatic icons identify exact platform domains and preserve manual overrides", async () => {
+  const { resolvePlatform, normalizeAccountUrl, isPaymentPlatform } =
+    await import("../src/social-platforms.js");
+  assert.equal(resolvePlatform("auto", "cash.app/$cherylxxw"), "cashapp");
+  assert.equal(
+    resolvePlatform("auto", "https://venmo.com/u/cherylxxw"),
+    "venmo",
+  );
+  assert.equal(
+    resolvePlatform("auto", "https://www.venmo.com/cherylxxw"),
+    "venmo",
+  );
+  assert.equal(resolvePlatform("auto", "https://x.com/cherylxxw"), "twitter");
+  assert.equal(resolvePlatform("auto", "https://kick.com/cherylxxw"), "kick");
+  assert.equal(
+    resolvePlatform("auto", "https://open.spotify.com/artist/test"),
+    "spotify",
+  );
+  assert.equal(resolvePlatform("auto", "mailto:hello@example.com"), "mail");
+  for (const url of [
+    "https://cash.app.evil.com/",
+    "https://example.com/cash.app",
+    "https://cash.app@evil.com/",
+    "javascript:alert(1)",
+    "",
+  ])
+    assert.equal(resolvePlatform("auto", url), "globe");
+  assert.equal(
+    resolvePlatform("heart", "https://cash.app/$cherylxxw"),
+    "heart",
+  );
+  assert.equal(
+    normalizeAccountUrl("cash.app/$cherylxxw"),
+    "https://cash.app/$cherylxxw",
+  );
+  assert.equal(isPaymentPlatform("auto", "https://cash.app/$cherylxxw"), true);
+  assert.equal(
+    socialFollowerTotal([
+      {
+        active: true,
+        icon: "auto",
+        url: "https://cash.app/$cherylxxw",
+        followers: 999,
+      },
+      { active: true, icon: "youtube", followers: 100 },
+    ]),
+    100,
+  );
+});

@@ -10,6 +10,7 @@ import {
   Facebook,
   Linkedin,
 } from "lucide-react";
+import { resolvePlatform } from "./social-platforms.js";
 import { brandPaths } from "./brand-paths";
 const lineIcons = {
   instagram: Instagram,
@@ -22,7 +23,14 @@ const lineIcons = {
   facebook: Facebook,
   linkedin: Linkedin,
 };
-export function SocialIcon({ name, size = 21, strokeWidth = 1.65, ...props }) {
+export function SocialIcon({
+  name,
+  url,
+  size = 21,
+  strokeWidth = 1.65,
+  ...props
+}) {
+  name = resolvePlatform(name, url);
   const path = brandPaths[name === "twitter" ? "x" : name];
   if (path)
     return (

@@ -1687,4 +1687,6 @@ summary {
   }
 }
 
-.social-row { flex-wrap: wrap; }
+.social-row {
+  flex-wrap: wrap;
+}
