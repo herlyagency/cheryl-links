@@ -1562,3 +1562,80 @@ summary {
   outline-offset: 3px;
   border-radius: 8px;
 }
+
+.follower-total {
+  font:
+    12px Inter,
+    system-ui,
+    sans-serif;
+  margin: 16px 0;
+  opacity: 0.85;
+}
+.follower-total strong {
+  color: var(--accent);
+  font-size: 18px;
+}
+.look-neon .link-card {
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--accent) 15%, transparent);
+}
+.look-paper .link-card {
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  box-shadow: 0 7px 0 color-mix(in srgb, var(--accent) 10%, transparent);
+}
+.look-glass .link-card {
+  background: color-mix(in srgb, var(--card) 65%, transparent) !important;
+  border: 1px solid #ffffff40;
+  backdrop-filter: blur(16px);
+}
+.look-bold .link-card {
+  border: 2px solid currentColor;
+  box-shadow: 5px 5px 0 currentColor;
+}
+.look-bold .profile h1 {
+  font-weight: 800;
+  letter-spacing: -2.5px;
+}
+.animation-fade .profile,
+.animation-fade .link-card {
+  animation: page-fade 0.65s ease both;
+}
+.animation-rise .profile,
+.animation-rise .link-card {
+  animation: page-rise 0.65s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.animation-rise .link-card:nth-child(2) {
+  animation-delay: 0.08s;
+}
+.animation-rise .link-card:nth-child(3) {
+  animation-delay: 0.16s;
+}
+.animation-rise .link-card:nth-child(n + 4) {
+  animation-delay: 0.24s;
+}
+@keyframes page-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes page-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .public-page *,
+  .public-page *::before,
+  .public-page *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

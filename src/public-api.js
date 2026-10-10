@@ -25,3 +25,15 @@ export async function publicSite() {
   if (!data) throw Error("The owner has not published this page yet.");
   return data;
 }
+
+export async function followerTotal() {
+  if (!configured) return null;
+  const response = await fetch(`${url}/rest/v1/rpc/get_follower_total`, {
+    method: "POST",
+    headers: { apikey: key, "Content-Type": "application/json" },
+    body: "{}",
+    signal: AbortSignal.timeout(10000),
+  });
+  if (!response.ok) return null;
+  return response.json();
+}

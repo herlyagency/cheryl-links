@@ -1,0 +1,26 @@
+name: Sync follower counts
+on:
+  schedule:
+    - cron: '0 12 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Refresh connected accounts
+        env:
+          PROJECT_URL: ${{ vars.VITE_SUPABASE_URL }}
+          SYNC_SECRET: ${{ secrets.FOLLOWER_SYNC_SECRET }}
+        run: |
+          if [ -z "$SYNC_SECRET" ]; then
+            echo "Follower sync is not configured yet. See README."
+            exit 0
+          fi
+          test -n "$PROJECT_URL"
+          curl --fail --silent --show-error --max-time 120 \
+            "$PROJECT_URL/functions/v1/sync-followers" \
+            -H "x-sync-secret: $SYNC_SECRET" \
+            -H 'Content-Type: application/json' \
+            --data '{}' --output /dev/null

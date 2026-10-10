@@ -2,3 +2,9 @@ project_id = "cheryl-links"
 [functions.collect]
 verify_jwt = false
 # This public endpoint verifies Turnstile and signed sessions itself.
+
+# These endpoints validate owner JWTs inside the handler (publishable key compatible).
+[functions.link-preview]
+verify_jwt = false
+[functions.sync-followers]
+verify_jwt = false
