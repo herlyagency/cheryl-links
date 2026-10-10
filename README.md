@@ -215,3 +215,8 @@ Supports Instagram, YouTube, TikTok, X/Twitter, Kick, Threads, Bluesky, Facebook
 
 ## Automatic and payment icons
 New icons default to Automatic (from link). Paste an account URL to detect supported platforms, including Venmo and Cash App. Bare domains such as cash.app/$yourcashtag normalize to HTTPS on save; unrecognized domains show a website icon. Manual platform choices override detection. Payment links use zero followers and do not contribute to the total. Copy the real sharing link from the payment app. Migration 009 permits automatic, venmo, and cashapp identifiers.
+
+## Sharing cherylxxw.com
+The static HTML Open Graph and Twitter tags point to the public `share-preview` Edge Function. It returns a 1200 × 630 PNG containing the **published** profile photo on the selected background color or gradient. No crawler JavaScript, login, or analytics consent is required. The function caches its generated image for up to one minute; messaging services may independently cache older previews. Admin → Share & tools displays the published preview.
+
+Deploy with `supabase functions deploy share-preview --project-ref xsvtainakcubyoqlrmcy --no-verify-jwt`. The function needs only Supabase's built-in URL/anon-key environment variables. PNG, JPEG, WebP uploads and the site's default SVG avatar are supported. Upload external profile photos using Appearance so their image URL is in the trusted Supabase images bucket. Arbitrary image hosts and redirects are rejected. If generation fails, the endpoint redirects to the bundled `social-preview.png` fallback. The renderer uses ImageScript 1.3.0; WebP decoding uses jSquash 1.5.0 with its pinned jsDelivr WASM codec. These also appear as development dependencies for image tests. No database migration is required.

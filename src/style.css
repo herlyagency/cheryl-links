@@ -1773,3 +1773,12 @@ summary {
     display: none;
   }
 }
+
+.sharing-preview {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1200 / 630;
+  object-fit: contain;
+  border-radius: 16px;
+  margin: 16px 0;
+}
