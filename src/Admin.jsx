@@ -1498,6 +1498,7 @@ function Analytics({ site, notify }) {
   );
 }
 function Tools({ site, notify }) {
+  const [previewVersion, setPreviewVersion] = useState(0);
   return (
     <>
       <div className="section-heading">
@@ -1506,6 +1507,30 @@ function Tools({ site, notify }) {
           <p>One link. All your favorite places.</p>
         </div>
       </div>
+      <section className="panel">
+        <h3>Link sharing preview</h3>
+        <p className="muted">
+          Your published profile photo and background appear when someone shares
+          cherylxxw.com. Upload your profile photo in Appearance, then publish.
+          Updates can take a minute; messaging apps may cache older previews.
+        </p>
+        <img
+          className="sharing-preview"
+          alt="Published link sharing preview"
+          src={
+            configured
+              ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/share-preview?v=${previewVersion}`
+              : "/social-preview.png"
+          }
+        />
+        <button
+          type="button"
+          className="button"
+          onClick={() => setPreviewVersion(Date.now())}
+        >
+          Refresh preview
+        </button>
+      </section>
       <section className="panel">
         <h3>Your address</h3>
         <div className="address">

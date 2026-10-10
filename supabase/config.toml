@@ -8,3 +8,7 @@ verify_jwt = false
 verify_jwt = false
 [functions.sync-followers]
 verify_jwt = false
+
+# Social crawlers fetch this public PNG without a user session.
+[functions.share-preview]
+verify_jwt = false
