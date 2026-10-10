@@ -377,5 +377,9 @@ export function automaticThumbnail(destination) {
 }
 
 export function linkThumbnail(link) {
-  return safeUrl(link.thumbnail, true) || automaticThumbnail(link.url);
+  return (
+    automaticThumbnail(link.thumbnail) ||
+    safeUrl(link.thumbnail, true) ||
+    automaticThumbnail(link.url)
+  );
 }
