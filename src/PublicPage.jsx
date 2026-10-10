@@ -1,3 +1,4 @@
+import Celebration from "./Celebration";
 import React, { useState, useEffect, useRef } from "react";
 import { Heart, Share2, Check, ArrowUpRight } from "lucide-react";
 import { safeUrl, visible, linkThumbnail, socialFollowerTotal } from "./model";
@@ -126,6 +127,7 @@ function PublicPage({ site, preview = false }) {
             : "Inter, system-ui, sans-serif",
       }}
     >
+      <Celebration theme={t} />
       <div className="public-top">
         <a className="wordmark" href="/" aria-label="Home">
           c<span>.</span>

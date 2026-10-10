@@ -1,3 +1,4 @@
+import Celebration, { celebrations } from "./Celebration";
 import React, { useState, useEffect, useRef } from "react";
 import {
   ArrowUpRight,
@@ -11,6 +12,7 @@ import {
   LayoutDashboard,
   Link as LinkIcon,
   Palette,
+  Sparkles,
   BarChart3,
   LogOut,
   Eye,
@@ -783,6 +785,80 @@ function SocialEditor({ site, setSite }) {
     </section>
   );
 }
+function Animations({ site, setSite }) {
+  const t = site.theme;
+  const [replay, setReplay] = useState(0);
+  const theme = (values) =>
+    setSite((s) => ({ ...s, theme: { ...s.theme, ...values } }));
+  return (
+    <div className="appearance-editor">
+      <section className="panel">
+        <h3>Page motion</h3>{" "}
+        <Field label="Motion">
+          <select
+            value={t.animation || "none"}
+            onChange={(e) => theme({ animation: e.target.value })}
+          >
+            <option value="none">Still</option>
+            <option value="fade">Soft fade</option>
+            <option value="rise">Staggered rise</option>
+          </select>
+        </Field>
+      </section>
+      <section className="panel">
+        <h3>Celebrations & holidays</h3>
+        <p className="muted">
+          Play a decorative effect when visitors open your page. Effects finish
+          automatically and respect reduced motion preferences.
+        </p>
+        <Field label="Celebration">
+          <select
+            value={t.celebration || "none"}
+            onChange={(e) => theme({ celebration: e.target.value })}
+          >
+            {Object.entries(celebrations).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Duration">
+          <select
+            value={t.celebrationDuration || 10}
+            onChange={(e) =>
+              theme({ celebrationDuration: Number(e.target.value) })
+            }
+          >
+            <option value={5}>5 seconds</option>
+            <option value={10}>10 seconds</option>
+            <option value={20}>20 seconds</option>
+          </select>
+        </Field>
+        <div className="celebration-demo">
+          <Celebration
+            key={`${replay}-${t.celebration}-${t.celebrationDuration}`}
+            theme={t}
+          />
+          <span>{celebrations[t.celebration || "none"]}</span>
+        </div>
+        <button
+          className="button"
+          type="button"
+          disabled={!t.celebration || t.celebration === "none"}
+          onClick={() => setReplay((n) => n + 1)}
+        >
+          Replay preview
+        </button>
+        <p className="muted">
+          Save and publish to show this effect on your public page. Choose None
+          when the occasion is over.
+        </p>
+      </section>
+    </div>
+  );
+}
+
 function Appearance({ site, setSite, notify }) {
   const [keepLinkStyles, setKeepLinkStyles] = useState(false);
   const t = site.theme,
@@ -956,17 +1032,7 @@ function Appearance({ site, setSite, notify }) {
         />
       </section>
       <section className="panel">
-        <h3>Shape, motion & spacing</h3>
-        <Field label="Motion">
-          <select
-            value={t.animation || "none"}
-            onChange={(e) => theme({ animation: e.target.value })}
-          >
-            <option value="none">Still</option>
-            <option value="fade">Soft fade</option>
-            <option value="rise">Staggered rise</option>
-          </select>
-        </Field>
+        <h3>Shape & spacing</h3>
         <Field label="Card look">
           <select
             value={t.look || "classic"}
@@ -1638,6 +1704,7 @@ function Admin() {
           {[
             ["links", LinkIcon, "My links"],
             ["appearance", Palette, "Appearance"],
+            ["animations", Sparkles, "Animations"],
             ["analytics", BarChart3, "Analytics"],
             ["share", Share2, "Share & tools"],
           ].map(([key, I, label]) => (
@@ -1737,6 +1804,9 @@ function Admin() {
             {tab === "appearance" && (
               <Appearance site={site} setSite={setSite} notify={notify} />
             )}{" "}
+            {tab === "animations" && (
+              <Animations site={site} setSite={setSite} />
+            )}
             {tab === "analytics" && <Analytics site={site} notify={notify} />}{" "}
             {tab === "share" && <Tools site={site} notify={notify} />}
           </main>
