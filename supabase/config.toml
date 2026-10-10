@@ -1,0 +1,4 @@
+project_id = "cheryl-links"
+[functions.collect]
+verify_jwt = false
+# This public endpoint verifies Turnstile and signed sessions itself.
