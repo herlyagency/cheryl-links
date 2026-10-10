@@ -161,3 +161,14 @@ test("automatic thumbnails parse video formats, reject impostor hosts and honor 
     expected,
   );
 });
+
+test("a YouTube URL pasted into the thumbnail field becomes an image", async () => {
+  const { linkThumbnail } = await import("../src/model.js");
+  assert.equal(
+    linkThumbnail({
+      url: "https://example.com/",
+      thumbnail: "https://www.youtube.com/watch?v=xqpZBSFcitQ&t=5919s",
+    }),
+    "https://i.ytimg.com/vi/xqpZBSFcitQ/hqdefault.jpg",
+  );
+});
