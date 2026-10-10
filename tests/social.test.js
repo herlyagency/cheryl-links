@@ -233,3 +233,19 @@ test("manual follower totals follow visible accounts and validate saved counts",
   site.socials[0].followers = null;
   validateSite(site);
 });
+
+test("new social platforms preserve follower totals and validate", async () => {
+  const { platformLabels } = await import("../src/social-platforms.js");
+  const site = structuredClone(sample);
+  for (const icon of Object.keys(platformLabels)) {
+    site.socials[0].icon = icon;
+    validateSite(site);
+  }
+  site.socials[0].icon = "twitter";
+  site.socials[0].followers = 100;
+  site.socials[1].icon = "kick";
+  site.socials[1].followers = 200;
+  assert.equal(socialFollowerTotal(site.socials), 300);
+  site.socials[0].icon = "unknown";
+  assert.throws(() => validateSite(site), /supported/);
+});

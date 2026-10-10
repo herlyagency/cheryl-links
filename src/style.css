@@ -1686,3 +1686,5 @@ summary {
     flex: 1 1 100%;
   }
 }
+
+.social-row { flex-wrap: wrap; }

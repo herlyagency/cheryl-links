@@ -1,31 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
-import {
-  Instagram,
-  Youtube,
-  Music2,
-  Mail,
-  Heart,
-  Globe,
-  Twitch,
-  Share2,
-  Check,
-  ArrowUpRight,
-} from "lucide-react";
+import { Heart, Share2, Check, ArrowUpRight } from "lucide-react";
 import { safeUrl, visible, linkThumbnail, socialFollowerTotal } from "./model";
 import { enabled, optedIn, consent, startTracking, track } from "./analytics";
-const icons = {
-  instagram: Instagram,
-  youtube: Youtube,
-  tiktok: Music2,
-  mail: Mail,
-  heart: Heart,
-  globe: Globe,
-  twitch: Twitch,
-};
-function Icon({ name, ...props }) {
-  const I = icons[name] || Globe;
-  return <I size={21} strokeWidth={1.65} {...props} />;
-}
+import { SocialIcon as Icon } from "./social-icons";
+import { platformLabels as icons } from "./social-platforms";
+
 function LinkImage({ src, icon, hero = false }) {
   const [failed, setFailed] = useState(false);
   if (failed || !src)
@@ -202,7 +181,7 @@ function PublicPage({ site, preview = false }) {
                   href={safeUrl(s.url)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label={s.icon}
+                  aria-label={icons[s.icon] || s.icon}
                   onClick={() => !preview && track("link_click", s.id)}
                 >
                   <Icon name={s.icon} size={19} />

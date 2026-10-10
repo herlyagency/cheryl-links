@@ -1,3 +1,4 @@
+import { platformLabels } from "./social-platforms.js";
 export const presets = {
   "Minimal Light": {
     background: "#faf7f2",
@@ -354,6 +355,8 @@ export function validateSite(site) {
           "Link colors need six-digit hex codes, or leave them blank.",
         );
   for (const l of [...site.links, ...site.socials]) {
+    if (!Object.hasOwn(platformLabels, l.icon))
+      throw Error("Choose a supported social platform.");
     if (!safeUrl(l.url))
       throw Error(
         "Every destination needs a valid https, http, mailto, or tel URL.",

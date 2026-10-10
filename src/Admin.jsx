@@ -2,13 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   ArrowUpRight,
   ArrowRight,
-  Instagram,
-  Youtube,
-  Music2,
-  Mail,
-  Heart,
-  Globe,
-  Twitch,
   Share2,
   Check,
   Plus,
@@ -56,19 +49,9 @@ import {
   stats,
 } from "./api";
 import PublicPage from "./PublicPage";
-const icons = {
-  instagram: Instagram,
-  youtube: Youtube,
-  tiktok: Music2,
-  mail: Mail,
-  heart: Heart,
-  globe: Globe,
-  twitch: Twitch,
-};
-function Icon({ name, ...props }) {
-  const I = icons[name] || Globe;
-  return <I size={21} strokeWidth={1.65} {...props} />;
-}
+import { SocialIcon as Icon } from "./social-icons";
+import { platformLabels as icons } from "./social-platforms";
+
 function Field({ label, children, ...props }) {
   return (
     <label className="field">
@@ -396,7 +379,9 @@ function LinkEditor({ site, setSite, notify }) {
                       onChange={(e) => update(l.id, { icon: e.target.value })}
                     >
                       {Object.keys(icons).map((k) => (
-                        <option key={k}>{k}</option>
+                        <option key={k} value={k}>
+                          {icons[k]}
+                        </option>
                       ))}
                     </select>
                   </Field>
@@ -644,7 +629,9 @@ function SocialEditor({ site, setSite }) {
               }
             >
               {Object.keys(icons).map((k) => (
-                <option key={k}>{k}</option>
+                <option key={k} value={k}>
+                  {icons[k]}
+                </option>
               ))}
             </select>
           </label>
@@ -700,7 +687,9 @@ function SocialEditor({ site, setSite }) {
             onChange={(e) => change(s.id, { icon: e.target.value })}
           >
             {Object.keys(icons).map((k) => (
-              <option key={k}>{k}</option>
+              <option key={k} value={k}>
+                {icons[k]}
+              </option>
             ))}
           </select>
           <input

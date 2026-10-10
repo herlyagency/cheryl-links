@@ -23,6 +23,7 @@ test("Postgres migrations enforce private drafts, atomic publishing, schedules a
       "005_function_permissions.sql",
       "006_followers.sql",
       "007_manual_followers.sql",
+      "008_social_platforms.sql",
     ])
       await pg.exec(
         await readFile(
@@ -106,6 +107,8 @@ test("Postgres migrations enforce private drafts, atomic publishing, schedules a
     );
     await pg.query("select public.publish_site()");
     const config = structuredClone(sample);
+    config.socials[0].icon = "twitter";
+    config.socials[1].icon = "kick";
     config.socials[0].followers = 1200;
     config.socials[1].followers = 3400;
     config.links[0].active = false;
