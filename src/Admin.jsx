@@ -2,13 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   ArrowUpRight,
   ArrowRight,
-  Instagram,
-  Youtube,
-  Music2,
-  Mail,
-  Heart,
-  Globe,
-  Twitch,
   Share2,
   Check,
   Plus,
@@ -56,19 +49,14 @@ import {
   stats,
 } from "./api";
 import PublicPage from "./PublicPage";
-const icons = {
-  instagram: Instagram,
-  youtube: Youtube,
-  tiktok: Music2,
-  mail: Mail,
-  heart: Heart,
-  globe: Globe,
-  twitch: Twitch,
-};
-function Icon({ name, ...props }) {
-  const I = icons[name] || Globe;
-  return <I size={21} strokeWidth={1.65} {...props} />;
-}
+import { SocialIcon as Icon } from "./social-icons";
+import {
+  platformLabels as icons,
+  normalizeAccountUrl,
+  resolvePlatform,
+  isPaymentPlatform,
+} from "./social-platforms";
+
 function Field({ label, children, ...props }) {
   return (
     <label className="field">
@@ -337,7 +325,7 @@ function LinkEditor({ site, setSite, notify }) {
                 <GripVertical size={18} />
               </button>
               <span className="editor-icon">
-                <Icon name={l.icon} />
+                <Icon name={l.icon} url={l.url} />
               </span>
               <button
                 className="editor-link-title"
@@ -396,7 +384,9 @@ function LinkEditor({ site, setSite, notify }) {
                       onChange={(e) => update(l.id, { icon: e.target.value })}
                     >
                       {Object.keys(icons).map((k) => (
-                        <option key={k}>{k}</option>
+                        <option key={k} value={k}>
+                          {icons[k]}
+                        </option>
                       ))}
                     </select>
                   </Field>
@@ -567,11 +557,12 @@ function toLocal(value) {
 function SocialEditor({ site, setSite }) {
   const [adding, setAdding] = useState(false);
   const [account, setAccount] = useState({
-    icon: "instagram",
-    url: "https://instagram.com/",
+    icon: "auto",
+    url: "",
     followers: "",
   });
   const total = socialFollowerTotal(site.socials);
+  const payment = isPaymentPlatform(account.icon, account.url);
 
   function change(id, p) {
     setSite((s) => ({
@@ -587,8 +578,8 @@ function SocialEditor({ site, setSite }) {
           className="button"
           onClick={() => {
             setAccount({
-              icon: "instagram",
-              url: "https://instagram.com/",
+              icon: "auto",
+              url: "",
               followers: "",
             });
             setAdding(true);
@@ -609,10 +600,11 @@ function SocialEditor({ site, setSite }) {
           aria-label="Add social account"
           onSubmit={(e) => {
             e.preventDefault();
-            if (!safeUrl(account.url)) return;
-            const followers = Number(account.followers);
+            const url = normalizeAccountUrl(account.url);
+            if (!safeUrl(url)) return;
+            const followers = payment ? 0 : Number(account.followers);
             if (
-              account.followers === "" ||
+              (!payment && account.followers === "") ||
               !Number.isSafeInteger(followers) ||
               followers < 0 ||
               followers > 1000000000000
@@ -625,7 +617,7 @@ function SocialEditor({ site, setSite }) {
                 {
                   id: crypto.randomUUID(),
                   icon: account.icon,
-                  url: account.url,
+                  url,
                   active: true,
                   followers,
                 },
@@ -644,41 +636,55 @@ function SocialEditor({ site, setSite }) {
               }
             >
               {Object.keys(icons).map((k) => (
-                <option key={k}>{k}</option>
+                <option key={k} value={k}>
+                  {icons[k]}
+                </option>
               ))}
             </select>
           </label>
           <label>
             Account URL
             <input
+              autoFocus
               required
+              placeholder="Paste your account or payment link"
               value={account.url}
               onChange={(e) =>
                 setAccount((a) => ({ ...a, url: e.target.value }))
               }
             />
           </label>
-          <label>
-            Current followers
-            <input
-              autoFocus
-              required
-              type="number"
-              min="0"
-              max="1000000000000"
-              step="1"
-              placeholder="Enter 0 for an account without followers"
-              value={account.followers}
-              onChange={(e) =>
-                setAccount((a) => ({ ...a, followers: e.target.value }))
-              }
-            />
-          </label>
+          {account.icon === "auto" && (
+            <p className="muted small">
+              Detected icon: {icons[resolvePlatform("auto", account.url)]}
+            </p>
+          )}
+          {payment ? (
+            <p className="muted small">
+              Payment links do not contribute to the follower total.
+            </p>
+          ) : (
+            <label>
+              Current followers
+              <input
+                required
+                type="number"
+                min="0"
+                max="1000000000000"
+                step="1"
+                placeholder="Enter 0 for an account without followers"
+                value={account.followers}
+                onChange={(e) =>
+                  setAccount((a) => ({ ...a, followers: e.target.value }))
+                }
+              />
+            </label>
+          )}
           <div className="link-actions">
             <button
               className="button"
               type="submit"
-              disabled={!safeUrl(account.url)}
+              disabled={!safeUrl(normalizeAccountUrl(account.url))}
             >
               Add account
             </button>
@@ -700,14 +706,20 @@ function SocialEditor({ site, setSite }) {
             onChange={(e) => change(s.id, { icon: e.target.value })}
           >
             {Object.keys(icons).map((k) => (
-              <option key={k}>{k}</option>
+              <option key={k} value={k}>
+                {icons[k]}
+              </option>
             ))}
           </select>
           <input
             aria-label="Social destination"
             value={s.url}
             onChange={(e) => change(s.id, { url: e.target.value })}
+            onBlur={(e) =>
+              change(s.id, { url: normalizeAccountUrl(e.target.value) })
+            }
           />
+          <Icon name={s.icon} url={s.url} size={18} />
           <label className="social-followers">
             Followers
             <input
@@ -717,7 +729,8 @@ function SocialEditor({ site, setSite }) {
               max="1000000000000"
               step="1"
               placeholder="Not entered"
-              value={s.followers ?? ""}
+              disabled={isPaymentPlatform(s.icon, s.url)}
+              value={isPaymentPlatform(s.icon, s.url) ? 0 : (s.followers ?? "")}
               onChange={(e) =>
                 change(s.id, {
                   followers:

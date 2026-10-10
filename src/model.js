@@ -1,3 +1,4 @@
+import { platformLabels, isPaymentPlatform } from "./social-platforms.js";
 export const presets = {
   "Minimal Light": {
     background: "#faf7f2",
@@ -127,7 +128,11 @@ for (const mood of Object.values(presets)) {
 export function socialFollowerTotal(socials) {
   const counts = socials
     .filter(
-      (s) => s.active && Number.isSafeInteger(s.followers) && s.followers >= 0,
+      (s) =>
+        s.active &&
+        !isPaymentPlatform(s.icon, s.url) &&
+        Number.isSafeInteger(s.followers) &&
+        s.followers >= 0,
     )
     .map((s) => s.followers);
   return counts.length ? counts.reduce((sum, count) => sum + count, 0) : null;
@@ -354,6 +359,8 @@ export function validateSite(site) {
           "Link colors need six-digit hex codes, or leave them blank.",
         );
   for (const l of [...site.links, ...site.socials]) {
+    if (!Object.hasOwn(platformLabels, l.icon))
+      throw Error("Choose a supported social platform.");
     if (!safeUrl(l.url))
       throw Error(
         "Every destination needs a valid https, http, mailto, or tel URL.",

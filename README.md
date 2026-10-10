@@ -209,3 +209,9 @@ Every public HTTP/HTTPS link requests a rich preview automatically in the link e
 
 ## Manual follower counts (current mode)
 In Admin → My links → Social icons, click Add icon. Enter the platform, account URL, and current follower/subscriber count (0 for email or other links without followers). Existing icons have editable follower fields. The combined total appears beneath the public icons and updates in the draft preview immediately; save and publish to update the live page. Only visible icons contribute. Missing counts are excluded, and zero is a valid count. Migration 007 validates counts in saved configurations. No API credentials are needed in this mode. The previous sync workflow is now manual-only; automatic account syncing is dormant.
+
+## Social platform picker
+Supports Instagram, YouTube, TikTok, X/Twitter, Kick, Threads, Bluesky, Facebook, LinkedIn, Discord, Telegram, Reddit, Spotify, Patreon, Pinterest, Snapchat, Twitch, Email, Support, and Website. New platforms work in both social icons and link-card icons, including manual follower counts. Migration 008 permits their saved platform identifiers. Brand SVG paths are bundled from [Simple Icons 16.0.0](https://github.com/simple-icons/simple-icons/tree/16.0.0) (CC0); no external icon requests are needed.
+
+## Automatic and payment icons
+New icons default to Automatic (from link). Paste an account URL to detect supported platforms, including Venmo and Cash App. Bare domains such as cash.app/$yourcashtag normalize to HTTPS on save; unrecognized domains show a website icon. Manual platform choices override detection. Payment links use zero followers and do not contribute to the total. Copy the real sharing link from the payment app. Migration 009 permits automatic, venmo, and cashapp identifiers.
