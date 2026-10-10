@@ -107,3 +107,57 @@ test("date ranges respect local midnight and yesterday excludes today", () => {
   assert.equal(new Date(r.from).getDate(), 9);
   assert.equal(new Date(r.to).getDate(), 10);
 });
+
+test("moods clear overriding link styles and preserve content and thumbnails", async () => {
+  const { applyMood, presets } = await import("../src/model.js");
+  const original = structuredClone(sample);
+  original.links[0].thumbnail = "https://example.com/photo.jpg";
+  const dark = applyMood(original, presets["Minimal Dark"]);
+  assert.equal(dark.theme.background, "#171a19");
+  assert.equal(dark.links[0].background, "");
+  assert.equal(dark.links[0].text, "");
+  assert.equal(dark.links[0].thumbnail, original.links[0].thumbnail);
+  assert.equal(dark.links[0].url, original.links[0].url);
+  assert.equal(original.links[0].background, "#e3ebde");
+  assert.equal(
+    applyMood(original, presets["Minimal Dark"], true).links[0].background,
+    "#e3ebde",
+  );
+  validateSite(dark);
+});
+
+test("automatic thumbnails parse video formats, reject impostor hosts and honor overrides", async () => {
+  const { automaticThumbnail, linkThumbnail } = await import("../src/model.js");
+  const id = "xqpZBSFcitQ",
+    expected = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+  for (const url of [
+    `https://www.youtube.com/watch?v=${id}&t=5`,
+    `https://youtu.be/${id}?si=x`,
+    `https://youtube.com/shorts/${id}`,
+    `https://youtube.com/live/${id}`,
+    `https://www.youtube-nocookie.com/embed/${id}`,
+  ])
+    assert.equal(automaticThumbnail(url), expected);
+  for (const url of [
+    "https://youtube.com/@cherylxxw",
+    "https://instagram.com/cherylxxw",
+    `https://youtube.com.evil.com/watch?v=${id}`,
+    "https://youtube.com/watch?v=bad",
+    "javascript:alert(1)",
+  ])
+    assert.equal(automaticThumbnail(url), "");
+  assert.equal(
+    linkThumbnail({
+      url: `https://youtu.be/${id}`,
+      thumbnail: "https://example.com/custom.jpg",
+    }),
+    "https://example.com/custom.jpg",
+  );
+  assert.equal(
+    linkThumbnail({
+      url: `https://youtu.be/${id}`,
+      thumbnail: "javascript:alert(1)",
+    }),
+    expected,
+  );
+});
