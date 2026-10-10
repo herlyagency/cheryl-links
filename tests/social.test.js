@@ -18,6 +18,7 @@ import {
   sample,
   formatFollowers,
   previewSupported,
+  socialFollowerTotal,
 } from "../src/model.js";
 test("Open Graph images handle attribute order, entities, relative paths and unsafe URLs", () => {
   assert.equal(
@@ -208,4 +209,27 @@ test("rich previews default to public web links through the metadata service", a
     ).image,
     null,
   );
+});
+
+test("manual follower totals follow visible accounts and validate saved counts", () => {
+  assert.equal(
+    socialFollowerTotal([
+      { active: true, followers: 1200 },
+      { active: true, followers: 3400 },
+      { active: false, followers: 900 },
+      { active: true },
+    ]),
+    4600,
+  );
+  assert.equal(socialFollowerTotal([{ active: true, followers: 0 }]), 0);
+  assert.equal(socialFollowerTotal([{ active: true }]), null);
+  const site = structuredClone(sample);
+  site.socials[0].followers = 1200;
+  validateSite(site);
+  for (const count of [-1, 1.5, "123", 1000000000001]) {
+    site.socials[0].followers = count;
+    assert.throws(() => validateSite(site), /Follower/);
+  }
+  site.socials[0].followers = null;
+  validateSite(site);
 });

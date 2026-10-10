@@ -11,9 +11,8 @@ import {
   Check,
   ArrowUpRight,
 } from "lucide-react";
-import { safeUrl, visible, linkThumbnail, formatFollowers } from "./model";
+import { safeUrl, visible, linkThumbnail, socialFollowerTotal } from "./model";
 import { enabled, optedIn, consent, startTracking, track } from "./analytics";
-import { followerTotal } from "./public-api";
 const icons = {
   instagram: Instagram,
   youtube: Youtube,
@@ -87,18 +86,7 @@ function Turnstile() {
 }
 function PublicPage({ site, preview = false }) {
   const { profile: p, theme: t, links, socials } = site;
-  const [followers, setFollowers] = useState(null);
-  useEffect(() => {
-    let cancelled = false;
-    followerTotal()
-      .then((value) => {
-        if (!cancelled) setFollowers(value);
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const followers = socialFollowerTotal(socials);
   const [allow, setAllow] = useState(optedIn());
   const [choice, setChoice] = useState(() => {
     try {
@@ -205,15 +193,6 @@ function PublicPage({ site, preview = false }) {
           </h1>
           {p.username && <p className="handle">@{p.username}</p>}
           <p className="bio">{p.bio}</p>
-          {followers?.total != null && (
-            <p
-              className="follower-total"
-              title="Combined followers and subscribers across connected accounts; people can follow more than one account."
-            >
-              <strong>{formatFollowers(followers.total)}</strong> total
-              followers
-            </p>
-          )}
           <div className="social-row">
             {socials
               .filter((s) => s.active)
@@ -230,6 +209,14 @@ function PublicPage({ site, preview = false }) {
                 </a>
               ))}
           </div>
+          {followers != null && (
+            <p
+              className="follower-total"
+              title="Combined manually entered followers and subscribers across visible accounts; this is not a unique audience."
+            >
+              <strong>{followers.toLocaleString("en")}</strong> total followers
+            </p>
+          )}
         </header>
         <div className="link-heading">
           <span>A FEW PLACES TO FIND ME</span>

@@ -124,6 +124,14 @@ for (const mood of Object.values(presets)) {
   mood.animation ??= "none";
 }
 
+export function socialFollowerTotal(socials) {
+  const counts = socials
+    .filter(
+      (s) => s.active && Number.isSafeInteger(s.followers) && s.followers >= 0,
+    )
+    .map((s) => s.followers);
+  return counts.length ? counts.reduce((sum, count) => sum + count, 0) : null;
+}
 export function formatFollowers(count) {
   return new Intl.NumberFormat("en", {
     notation: "compact",
@@ -349,6 +357,17 @@ export function validateSite(site) {
     if (!safeUrl(l.url))
       throw Error(
         "Every destination needs a valid https, http, mailto, or tel URL.",
+      );
+  }
+  for (const social of site.socials) {
+    if (
+      social.followers != null &&
+      (!Number.isSafeInteger(social.followers) ||
+        social.followers < 0 ||
+        social.followers > 1000000000000)
+    )
+      throw Error(
+        "Follower counts must be whole numbers between 0 and 1 trillion.",
       );
   }
   for (const l of site.links) {
