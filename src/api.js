@@ -87,3 +87,34 @@ export async function stats(from, to) {
   if (error) throw error;
   return data;
 }
+
+export async function fetchLinkPreview(url) {
+  if (!db) return null;
+  const { data, error } = await db.functions.invoke("link-preview", {
+    body: { url },
+  });
+  if (error)
+    throw Error("Link preview unavailable. You can upload an image instead.");
+  return data?.image || null;
+}
+export async function syncFollowers() {
+  if (!db) return { accounts: [], total: null };
+  const { data, error } = await db.functions.invoke("sync-followers", {
+    body: {},
+  });
+  if (error)
+    throw Error(
+      "Follower sync unavailable. Check the function deployment and account connections.",
+    );
+  return data;
+}
+export async function loadFollowers() {
+  if (!db) return { accounts: [], total: null };
+  const { data, error } = await db
+    .from("site_followers")
+    .select("accounts,synced_at")
+    .eq("id", 1)
+    .maybeSingle();
+  if (error) throw Error("Run migration 006 to enable follower sync.");
+  return data || { accounts: [], total: null };
+}

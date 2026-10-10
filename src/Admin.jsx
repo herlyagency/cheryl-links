@@ -39,6 +39,7 @@ import {
   presets,
   applyMood,
   automaticThumbnail,
+  previewSupported,
   safeUrl,
   rangeDates,
   csv,
@@ -195,7 +196,53 @@ function ImageField({ label, value, onChange, notify }) {
     </div>
   );
 }
+import { fetchLinkPreview, syncFollowers, loadFollowers } from "./api";
+
 function LinkEditor({ site, setSite, notify }) {
+  const previewRequests = useRef(new Set());
+  const [previewStatus, setPreviewStatus] = useState({});
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      for (const link of site.links) {
+        const key = `${link.id}:${link.url}`;
+        if (
+          !previewSupported(link.url) ||
+          (link.thumbnail && link.thumbnail !== link.url) ||
+          previewRequests.current.has(key)
+        )
+          continue;
+        previewRequests.current.add(key);
+        setPreviewStatus((s) => ({
+          ...s,
+          [link.id]: "Looking for a preview image…",
+        }));
+        fetchLinkPreview(link.url)
+          .then((image) => {
+            if (image)
+              setSite((s) => ({
+                ...s,
+                links: s.links.map((l) =>
+                  l.id === link.id &&
+                  l.url === link.url &&
+                  (!l.thumbnail || l.thumbnail === l.url)
+                    ? { ...l, thumbnail: image, thumbnailSourceUrl: link.url }
+                    : l,
+                ),
+              }));
+            setPreviewStatus((s) => ({
+              ...s,
+              [link.id]: image
+                ? "Preview image found."
+                : "No preview image available. Upload an image instead.",
+            }));
+          })
+          .catch((error) =>
+            setPreviewStatus((s) => ({ ...s, [link.id]: error.message })),
+          );
+      }
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [site.links, setSite]);
   const [open, setOpen] = useState(null),
     [drag, setDrag] = useState(null);
   function update(id, patch) {
@@ -310,7 +357,14 @@ function LinkEditor({ site, setSite, notify }) {
                   <Field
                     label="Destination URL"
                     value={l.url}
-                    onChange={(e) => update(l.id, { url: e.target.value })}
+                    onChange={(e) =>
+                      update(l.id, {
+                        url: e.target.value,
+                        ...(l.thumbnailSourceUrl
+                          ? { thumbnail: "", thumbnailSourceUrl: "" }
+                          : {}),
+                      })
+                    }
                   />
                 </div>
                 <Field
@@ -376,14 +430,21 @@ function LinkEditor({ site, setSite, notify }) {
                 <ImageField
                   label="Thumbnail override (optional)"
                   value={l.thumbnail}
-                  onChange={(v) => update(l.id, { thumbnail: v })}
+                  onChange={(v) =>
+                    update(l.id, { thumbnail: v, thumbnailSourceUrl: "" })
+                  }
                   notify={notify}
                 />
                 <p className="muted small">
                   {automaticThumbnail(l.url)
                     ? "YouTube thumbnail is automatic. Upload an image to override it; clear the override to use the video thumbnail."
-                    : "YouTube video links get automatic thumbnails. For Instagram profiles or posts, upload an image or paste an image URL."}
+                    : "YouTube video links and supported Open Graph pages get automatic thumbnails. For Instagram profiles or posts, upload an image or paste an image URL."}
                 </p>
+                {previewStatus[l.id] && (
+                  <p className="muted small" role="status">
+                    {previewStatus[l.id]}
+                  </p>
+                )}
                 <ImageField
                   label="Background image"
                   value={l.backgroundImage}
@@ -562,6 +623,64 @@ function SocialEditor({ site, setSite }) {
     </section>
   );
 }
+function FollowerConnections({ notify }) {
+  const [report, setReport] = useState(null),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState("");
+  const sync = async () => {
+    setBusy(true);
+    try {
+      setReport(await syncFollowers());
+      setError("");
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  useEffect(() => {
+    loadFollowers()
+      .then(setReport)
+      .catch((e) => setError(e.message));
+  }, []);
+  return (
+    <section className="panel">
+      <h3>Total followers</h3>
+      <p className="muted small">
+        Combined followers and subscribers from connected accounts. Updated
+        automatically each day after setup; this is a combined count, not a
+        unique audience.
+      </p>
+      <button className="button" onClick={sync} disabled={busy}>
+        {busy ? "Syncing…" : "Sync followers now"}
+      </button>
+      {error && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
+      {report?.accounts?.length ? (
+        report.accounts.map((account) => (
+          <p key={account.account} className="small">
+            {account.label || account.platform}:{" "}
+            {account.count != null
+              ? account.count.toLocaleString()
+              : "Not synced"}{" "}
+            · {account.status}
+            {account.updated_at
+              ? ` · ${new Date(account.updated_at).toLocaleString()}`
+              : ""}
+          </p>
+        ))
+      ) : (
+        <p className="muted small">
+          No accounts connected. Add platform API credentials in Supabase Edge
+          Function secrets; setup instructions are in the README.
+        </p>
+      )}
+    </section>
+  );
+}
 function Appearance({ site, setSite, notify }) {
   const [keepLinkStyles, setKeepLinkStyles] = useState(false);
   const t = site.theme,
@@ -613,6 +732,7 @@ function Appearance({ site, setSite, notify }) {
           ))}
         </div>
       </section>
+      <FollowerConnections notify={notify} />
       <section className="panel">
         <h3>Profile</h3>
         <ImageField
@@ -735,7 +855,29 @@ function Appearance({ site, setSite, notify }) {
         />
       </section>
       <section className="panel">
-        <h3>Shape & spacing</h3>
+        <h3>Shape, motion & spacing</h3>
+        <Field label="Motion">
+          <select
+            value={t.animation || "none"}
+            onChange={(e) => theme({ animation: e.target.value })}
+          >
+            <option value="none">Still</option>
+            <option value="fade">Soft fade</option>
+            <option value="rise">Staggered rise</option>
+          </select>
+        </Field>
+        <Field label="Card look">
+          <select
+            value={t.look || "classic"}
+            onChange={(e) => theme({ look: e.target.value })}
+          >
+            <option value="classic">Classic</option>
+            <option value="neon">Neon glow</option>
+            <option value="paper">Soft paper</option>
+            <option value="glass">Frosted glass</option>
+            <option value="bold">Bold outlines</option>
+          </select>
+        </Field>
         <div className="two-columns">
           {[
             ["radius", "Corner radius", 0, 40],

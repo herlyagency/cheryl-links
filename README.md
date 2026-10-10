@@ -174,3 +174,32 @@ Export site settings from **Share & tools** and analytics CSV from **Analytics**
 Selecting a mood applies its colors, typography and layout to the draft and live preview. Custom link styles are cleared by default so cards follow the mood; turn on **Keep custom link styles** to preserve them. Content, visibility, schedules and thumbnails remain unchanged. Save the draft or publish to persist the appearance.
 
 YouTube video URLs automatically use a video thumbnail, including watch, youtu.be, Shorts, live and embed URLs. A manual thumbnail takes priority. Featured cards display the image at a larger size. Failed images fall back to the platform icon or decorative artwork. Channel and playlist URLs do not identify an individual video. Instagram profiles/posts use a manual upload or image URL; automatic Instagram metadata retrieval is not implemented.
+
+## Follower sync and Open Graph previews (PR setup)
+
+After merging this patch:
+
+1. Run `supabase/migrations/006_followers.sql` once in the Supabase SQL Editor. It adds the private follower cache, public aggregate RPC, and validates the new look/motion settings while allowing older drafts.
+2. Deploy both owner-protected functions from the repository:
+   ```sh
+   supabase functions deploy link-preview --project-ref xsvtainakcubyoqlrmcy --no-verify-jwt
+   supabase functions deploy sync-followers --project-ref xsvtainakcubyoqlrmcy --no-verify-jwt
+   ```
+   They validate the Supabase owner JWT themselves. The follower endpoint also accepts the separate scheduled-sync secret; the preview endpoint does not.
+3. Set `FOLLOWER_ACCOUNTS_JSON` in **Supabase → Edge Functions → Secrets**. Its value is an array, with one entry per authorized account (up to 10). Multiple Instagram accounts can be included. Example with placeholders:
+   ```json
+   [
+     {"platform":"youtube","id":"YOUR_CHANNEL_ID","token":"YOUR_YOUTUBE_DATA_API_KEY","label":"YouTube"},
+     {"platform":"instagram","id":"YOUR_PROFESSIONAL_IG_USER_ID","token":"YOUR_FACEBOOK_GRAPH_ACCESS_TOKEN","label":"Instagram"},
+     {"platform":"tiktok","id":"YOUR_OPEN_ID","token":"YOUR_AUTHORIZED_ACCESS_TOKEN","label":"TikTok"}
+   ]
+   ```
+   Only include accounts whose credentials are ready. YouTube uses the Data API channel statistics; its subscriber count is rounded by YouTube. Instagram uses a professional account and Facebook Graph API v24.0 `followers_count`, with an appropriately authorized account token. TikTok requires the user's approved `user.info.stats` scope. Personal Instagram profiles and arbitrary public TikTok handles cannot be synced by this implementation. This PR does not create developer apps, request platform approvals, implement OAuth connection screens, or refresh expiring access tokens. Renew expiring tokens in Supabase secrets. Do not paste API credentials in GitHub code or frontend variables.
+4. Generate a separate secret with `openssl rand -hex 32`. Set **the same value** as `FOLLOWER_SYNC_SECRET` in Supabase Edge Function secrets and GitHub **Actions → Secrets**. The daily `Sync follower counts` workflow runs at 12:00 UTC. Without this secret it skips collection. Scheduled runs can be delayed by GitHub; run it manually for an immediate refresh.
+5. Open **Admin → Appearance → Total followers → Sync followers now**. The public total combines successful cached account counts; it is not a deduplicated audience. Missing credentials show no fabricated total, while failed connections preserve the last known count and show their status privately. An owner sync within five minutes returns the cached result. Removing an account from the secret removes it from the cache at the next sync.
+
+Supported Open Graph publishers are WithRose, Vimeo, Instagram, and TikTok. When adding or changing an eligible URL with no manual thumbnail, the owner editor fetches its page metadata and saves `og:image` (or Twitter image fallback) into the draft. Save/publish as usual. YouTube video thumbnails still work directly without the preview endpoint. Manual images take priority; changing the destination clears only previously fetched previews. Login-walled or bot-blocked pages can return no image. The collector fetches only a fixed trusted host allowlist, checks redirect destinations, has a timeout and 256 KB HTML cap, and never accepts an arbitrary server-side fetch target. Public visitors load saved images, not the preview endpoint.
+
+New looks: Neon Night, Rose Paper, Ocean Glass, Bold Studio. Entrance animations are optional and disabled for visitors with reduced-motion preferences. Existing themes default to Classic/Still. Mood selection clears custom card styles unless **Keep custom link styles** is enabled.
+
+API references: [YouTube channel statistics](https://developers.google.com/youtube/v3/docs/channels), [TikTok User Info](https://developers.tiktok.com/doc/tiktok-api-v2-get-user-info/), [Instagram Platform](https://developers.facebook.com/docs/instagram-platform/).

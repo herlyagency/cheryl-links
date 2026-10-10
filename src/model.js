@@ -68,6 +68,92 @@ export const presets = {
     backgroundImage: "",
   },
 };
+Object.assign(presets, {
+  "Neon Night": {
+    ...presets["Minimal Dark"],
+    background: "#101020",
+    backgroundEnd: "#35164d",
+    gradient: true,
+    card: "#22213b",
+    accent: "#d2ff66",
+    text: "#f5f5ff",
+    radius: 8,
+    font: "sans",
+    look: "neon",
+    animation: "rise",
+  },
+  "Rose Paper": {
+    ...presets["Minimal Light"],
+    background: "#fff1ec",
+    backgroundEnd: "#f2d7d9",
+    gradient: true,
+    card: "#fff9f5",
+    text: "#542b37",
+    accent: "#b53565",
+    radius: 32,
+    look: "paper",
+    animation: "fade",
+  },
+  "Ocean Glass": {
+    ...presets["Modern Gradient"],
+    background: "#122f47",
+    backgroundEnd: "#28646d",
+    text: "#f0fffc",
+    card: "#23536a",
+    accent: "#93ffe5",
+    mode: "dark",
+    radius: 24,
+    look: "glass",
+    animation: "rise",
+  },
+  "Bold Studio": {
+    ...presets["Minimal Light"],
+    background: "#ffe765",
+    backgroundEnd: "#ffe765",
+    text: "#151515",
+    card: "#fffef5",
+    accent: "#ec4b30",
+    radius: 0,
+    font: "sans",
+    look: "bold",
+    animation: "fade",
+  },
+});
+for (const mood of Object.values(presets)) {
+  mood.look ??= "classic";
+  mood.animation ??= "none";
+}
+
+export function formatFollowers(count) {
+  return new Intl.NumberFormat("en", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(count);
+}
+export function previewSupported(destination) {
+  try {
+    const u = new URL(destination);
+    return (
+      u.protocol === "https:" &&
+      !u.username &&
+      !u.password &&
+      !u.port &&
+      [
+        "withrose.com",
+        "www.withrose.com",
+        "vimeo.com",
+        "www.vimeo.com",
+        "instagram.com",
+        "www.instagram.com",
+        "tiktok.com",
+        "www.tiktok.com",
+      ].includes(u.hostname)
+    );
+  } catch {
+    return false;
+  }
+}
+
 export const sample = {
   profile: {
     display_name: "Cheryl",
@@ -224,6 +310,13 @@ export function validateSite(site) {
     !Array.isArray(site.socials)
   )
     throw Error("Invalid site configuration.");
+  if (
+    !["classic", "neon", "paper", "glass", "bold"].includes(
+      site.theme.look || "classic",
+    ) ||
+    !["none", "fade", "rise"].includes(site.theme.animation || "none")
+  )
+    throw Error("Choose a supported look and motion setting.");
   if (!site.profile.display_name.trim()) throw Error("Add a display name.");
   if (site.links.length > 50 || site.socials.length > 12)
     throw Error("Use at most 50 links and 12 social icons.");

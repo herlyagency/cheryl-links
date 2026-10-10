@@ -16,7 +16,13 @@ test("Postgres migrations enforce private drafts, atomic publishing, schedules a
  create table storage.objects(id uuid,bucket_id text); alter table storage.objects enable row level security;
  grant usage on schema public,auth,storage to anon,authenticated,service_role;
  insert into auth.users values('${owner}'),('${outsider}');`);
-    for (const file of ["001_site.sql", "002_analytics.sql", "004_seed.sql", "005_function_permissions.sql"])
+    for (const file of [
+      "001_site.sql",
+      "002_analytics.sql",
+      "004_seed.sql",
+      "005_function_permissions.sql",
+      "006_followers.sql",
+    ])
       await pg.exec(
         await readFile(
           new URL("../supabase/migrations/" + file, import.meta.url),
@@ -24,6 +30,28 @@ test("Postgres migrations enforce private drafts, atomic publishing, schedules a
         ),
       );
     await pg.exec(`insert into public.site_owner(user_id) values('${owner}');`);
+    await pg.exec("set role service_role");
+    await pg.query(
+      "insert into public.site_followers(id,accounts) values(1,$1)",
+      [
+        JSON.stringify([
+          { platform: "youtube", account: "youtube:test", count: 1200 },
+          { platform: "instagram", account: "instagram:test", count: 3400 },
+          { platform: "tiktok", account: "tiktok:test", count: null },
+        ]),
+      ],
+    );
+    await pg.exec("reset role; set role anon");
+    assert.equal(
+      (await pg.query("select public.get_follower_total() as report")).rows[0]
+        .report.total,
+      4600,
+    );
+    await assert.rejects(
+      pg.query("select * from public.site_followers"),
+      /permission denied/,
+    );
+    await pg.exec("reset role");
     await pg.exec("set role anon");
     assert.equal(
       (await pg.query("select public.get_public_site() as site")).rows[0].site,
@@ -47,6 +75,14 @@ test("Postgres migrations enforce private drafts, atomic publishing, schedules a
     );
     await pg.exec(
       `reset role; set request.jwt.claim.sub='${outsider}'; set role authenticated;`,
+    );
+    assert.equal(
+      (await pg.query("select * from public.site_followers")).rows.length,
+      0,
+    );
+    await assert.rejects(
+      pg.query("update public.site_followers set accounts='[]'"),
+      /permission denied/,
     );
     assert.equal(
       (await pg.query("select * from public.site_drafts")).rows.length,

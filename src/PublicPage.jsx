@@ -11,8 +11,9 @@ import {
   Check,
   ArrowUpRight,
 } from "lucide-react";
-import { safeUrl, visible, linkThumbnail } from "./model";
+import { safeUrl, visible, linkThumbnail, formatFollowers } from "./model";
 import { enabled, optedIn, consent, startTracking, track } from "./analytics";
+import { followerTotal } from "./public-api";
 const icons = {
   instagram: Instagram,
   youtube: Youtube,
@@ -86,6 +87,18 @@ function Turnstile() {
 }
 function PublicPage({ site, preview = false }) {
   const { profile: p, theme: t, links, socials } = site;
+  const [followers, setFollowers] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    followerTotal()
+      .then((value) => {
+        if (!cancelled) setFollowers(value);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const [allow, setAllow] = useState(optedIn());
   const [choice, setChoice] = useState(() => {
     try {
@@ -124,7 +137,7 @@ function PublicPage({ site, preview = false }) {
   }
   return (
     <div
-      className={`public-page ${preview ? "preview-page" : ""}`}
+      className={`public-page look-${t.look || "classic"} animation-${t.animation || "none"} ${preview ? "preview-page" : ""}`}
       style={{
         background,
         color: t.text,
@@ -192,6 +205,15 @@ function PublicPage({ site, preview = false }) {
           </h1>
           {p.username && <p className="handle">@{p.username}</p>}
           <p className="bio">{p.bio}</p>
+          {followers?.total != null && (
+            <p
+              className="follower-total"
+              title="Combined followers and subscribers across connected accounts; people can follow more than one account."
+            >
+              <strong>{formatFollowers(followers.total)}</strong> total
+              followers
+            </p>
+          )}
           <div className="social-row">
             {socials
               .filter((s) => s.active)
