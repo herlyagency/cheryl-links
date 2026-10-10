@@ -330,3 +330,52 @@ export function csv(rows) {
     )
     .join("\r\n");
 }
+
+// Apply the whole mood, including link styles that otherwise override it.
+export function applyMood(site, mood, keepLinkStyles = false) {
+  return {
+    ...site,
+    theme: { ...site.theme, ...mood },
+    links: keepLinkStyles
+      ? site.links
+      : site.links.map((link) => ({
+          ...link,
+          background: "",
+          text: "",
+          border: "",
+          radius: null,
+          backgroundImage: "",
+        })),
+  };
+}
+
+export function automaticThumbnail(destination) {
+  try {
+    const url = new URL(safeUrl(destination));
+    const host = url.hostname.toLowerCase();
+    let id = "";
+    if (host === "youtu.be") id = url.pathname.split("/")[1];
+    else if (
+      [
+        "youtube.com",
+        "www.youtube.com",
+        "m.youtube.com",
+        "youtube-nocookie.com",
+        "www.youtube-nocookie.com",
+      ].includes(host)
+    ) {
+      if (url.pathname === "/watch") id = url.searchParams.get("v");
+      else if (/^\/(shorts|embed|live)\//.test(url.pathname))
+        id = url.pathname.split("/")[2];
+    }
+    return /^[a-zA-Z0-9_-]{11}$/.test(id || "")
+      ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg`
+      : "";
+  } catch {
+    return "";
+  }
+}
+
+export function linkThumbnail(link) {
+  return safeUrl(link.thumbnail, true) || automaticThumbnail(link.url);
+}

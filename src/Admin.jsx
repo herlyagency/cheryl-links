@@ -35,7 +35,14 @@ import {
   Save,
   CheckCircle2,
 } from "lucide-react";
-import { presets, safeUrl, rangeDates, csv } from "./model";
+import {
+  presets,
+  applyMood,
+  automaticThumbnail,
+  safeUrl,
+  rangeDates,
+  csv,
+} from "./model";
 import {
   db,
   configured,
@@ -367,11 +374,16 @@ function LinkEditor({ site, setSite, notify }) {
                   />
                 </div>
                 <ImageField
-                  label="Thumbnail URL"
+                  label="Thumbnail override (optional)"
                   value={l.thumbnail}
                   onChange={(v) => update(l.id, { thumbnail: v })}
                   notify={notify}
                 />
+                <p className="muted small">
+                  {automaticThumbnail(l.url)
+                    ? "YouTube thumbnail is automatic. Upload an image to override it; clear the override to use the video thumbnail."
+                    : "YouTube video links get automatic thumbnails. For Instagram profiles or posts, upload an image or paste an image URL."}
+                </p>
                 <ImageField
                   label="Background image"
                   value={l.backgroundImage}
@@ -551,8 +563,10 @@ function SocialEditor({ site, setSite }) {
   );
 }
 function Appearance({ site, setSite, notify }) {
+  const [keepLinkStyles, setKeepLinkStyles] = useState(false);
   const t = site.theme,
     p = site.profile;
+  const mood = (value) => setSite((s) => applyMood(s, value, keepLinkStyles));
   const theme = (patch) =>
       setSite((s) => ({ ...s, theme: { ...s.theme, ...patch } })),
     profile = (patch) =>
@@ -567,9 +581,25 @@ function Appearance({ site, setSite, notify }) {
       </div>
       <section className="panel">
         <h3>Start with a mood</h3>
+        <p className="muted small">
+          Apply a complete look, then save and publish when ready.
+        </p>
+        <Toggle
+          label="Keep custom link styles"
+          value={keepLinkStyles}
+          onChange={setKeepLinkStyles}
+        />
         <div className="presets">
           {Object.entries(presets).map(([name, v]) => (
-            <button key={name} className="preset" onClick={() => theme(v)}>
+            <button
+              key={name}
+              type="button"
+              className="preset"
+              aria-pressed={Object.entries(v).every(
+                ([key, value]) => t[key] === value,
+              )}
+              onClick={() => mood(v)}
+            >
               <span
                 style={{
                   background: `linear-gradient(135deg,${v.background},${v.backgroundEnd})`,
@@ -680,7 +710,7 @@ function Appearance({ site, setSite, notify }) {
             <select
               value={t.mode}
               onChange={(e) =>
-                theme(
+                mood(
                   presets[
                     e.target.value === "dark" ? "Minimal Dark" : "Minimal Light"
                   ],
@@ -726,7 +756,7 @@ function Appearance({ site, setSite, notify }) {
         </div>
         <button
           className="button"
-          onClick={() => theme(presets["Minimal Light"])}
+          onClick={() => mood(presets["Minimal Light"])}
         >
           Restore default theme
         </button>

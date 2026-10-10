@@ -1515,3 +1515,50 @@ summary {
 .desktop-frame .feature-art > span:not(.art-note) {
   font-size: 39px;
 }
+
+/* Public and preview details follow the selected mood. */
+.public-page .eyebrow,
+.public-page .handle {
+  color: inherit;
+  opacity: 0.72;
+}
+.public-page .avatar-ring {
+  border-color: color-mix(in srgb, currentColor 30%, transparent);
+}
+.public-page .avatar-ring:after {
+  background: var(--accent);
+  border-color: var(--page-background);
+}
+.public-page .profile-badge {
+  background: var(--accent);
+}
+.public-page .share {
+  border-color: color-mix(in srgb, currentColor 20%, transparent);
+}
+.public-page .feature-art {
+  background: color-mix(in srgb, var(--accent) 18%, var(--card));
+}
+.public-page .feature-art > span:not(.art-note) {
+  color: inherit;
+}
+.public-page .art-rays {
+  color: var(--accent);
+  opacity: 0.45;
+}
+.public-page .art-circle {
+  border-color: var(--accent);
+  opacity: 0.4;
+}
+.feature-thumbnail {
+  display: block;
+  width: calc(100% - 24px);
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  margin: 0 12px 12px;
+  border-radius: 10px;
+}
+.preset[aria-pressed="true"] {
+  outline: 2px solid #c74f36;
+  outline-offset: 3px;
+  border-radius: 8px;
+}

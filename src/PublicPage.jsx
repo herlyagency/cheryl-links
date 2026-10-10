@@ -11,7 +11,7 @@ import {
   Check,
   ArrowUpRight,
 } from "lucide-react";
-import { safeUrl, visible } from "./model";
+import { safeUrl, visible, linkThumbnail } from "./model";
 import { enabled, optedIn, consent, startTracking, track } from "./analytics";
 const icons = {
   instagram: Instagram,
@@ -25,6 +25,31 @@ const icons = {
 function Icon({ name, ...props }) {
   const I = icons[name] || Globe;
   return <I size={21} strokeWidth={1.65} {...props} />;
+}
+function LinkImage({ src, icon, hero = false }) {
+  const [failed, setFailed] = useState(false);
+  if (failed || !src)
+    return hero ? (
+      <div className="feature-art" aria-hidden="true">
+        <span>
+          stay
+          <br />
+          <i>curious.</i>
+        </span>
+      </div>
+    ) : (
+      <Icon name={icon} />
+    );
+  return (
+    <img
+      className={hero ? "feature-thumbnail" : undefined}
+      src={src}
+      alt=""
+      loading="lazy"
+      referrerPolicy="no-referrer"
+      onError={() => setFailed(true)}
+    />
+  );
 }
 function Turnstile() {
   const ref = useRef(null);
@@ -104,6 +129,8 @@ function PublicPage({ site, preview = false }) {
         background,
         color: t.text,
         "--accent": t.accent,
+        "--page-background": t.background,
+        colorScheme: t.mode,
         "--card": t.card,
         "--radius": t.radius + "px",
         "--gap": t.gap + "px",
@@ -214,15 +241,11 @@ function PublicPage({ site, preview = false }) {
                 )}
                 <div className="card-inner">
                   <span className="card-icon">
-                    {l.thumbnail && safeUrl(l.thumbnail, true) ? (
-                      <img
-                        src={safeUrl(l.thumbnail, true)}
-                        alt=""
-                        loading="lazy"
-                      />
-                    ) : (
-                      <Icon name={l.icon} />
-                    )}
+                    <LinkImage
+                      key={linkThumbnail(l)}
+                      src={linkThumbnail(l)}
+                      icon={l.icon}
+                    />
                   </span>
                   <span className="card-copy">
                     <strong>{l.title}</strong>
@@ -230,22 +253,30 @@ function PublicPage({ site, preview = false }) {
                   </span>
                   <ArrowUpRight size={18} className="card-arrow" />
                 </div>
-                {l.featured && (
-                  <div className="feature-art" aria-hidden="true">
-                    <div className="art-circle" />
-                    <span>
-                      stay
-                      <br />
-                      <i>curious.</i>
-                    </span>
-                    <div className="art-rays">✳</div>
-                    <span className="art-note">
-                      a new perspective
-                      <br />
-                      is one click away
-                    </span>
-                  </div>
-                )}
+                {l.featured &&
+                  (linkThumbnail(l) ? (
+                    <LinkImage
+                      key={linkThumbnail(l)}
+                      src={linkThumbnail(l)}
+                      icon={l.icon}
+                      hero
+                    />
+                  ) : (
+                    <div className="feature-art" aria-hidden="true">
+                      <div className="art-circle" />
+                      <span>
+                        stay
+                        <br />
+                        <i>curious.</i>
+                      </span>
+                      <div className="art-rays">✳</div>
+                      <span className="art-note">
+                        a new perspective
+                        <br />
+                        is one click away
+                      </span>
+                    </div>
+                  ))}
               </a>
             ))}
         </section>
