@@ -134,20 +134,15 @@ export function previewSupported(destination) {
   try {
     const u = new URL(destination);
     return (
-      u.protocol === "https:" &&
+      ["http:", "https:"].includes(u.protocol) &&
       !u.username &&
       !u.password &&
       !u.port &&
-      [
-        "withrose.com",
-        "www.withrose.com",
-        "vimeo.com",
-        "www.vimeo.com",
-        "instagram.com",
-        "www.instagram.com",
-        "tiktok.com",
-        "www.tiktok.com",
-      ].includes(u.hostname)
+      u.hostname.includes(".") &&
+      !u.hostname.endsWith(".local") &&
+      !u.hostname.endsWith(".internal") &&
+      !/^[\d.]+$/.test(u.hostname) &&
+      !u.hostname.includes(":")
     );
   } catch {
     return false;

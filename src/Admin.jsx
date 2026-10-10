@@ -217,23 +217,36 @@ function LinkEditor({ site, setSite, notify }) {
           [link.id]: "Looking for a preview image…",
         }));
         fetchLinkPreview(link.url)
-          .then((image) => {
-            if (image)
+          .then((preview) => {
+            const image = preview?.image;
+            if (preview)
               setSite((s) => ({
                 ...s,
                 links: s.links.map((l) =>
                   l.id === link.id &&
                   l.url === link.url &&
                   (!l.thumbnail || l.thumbnail === l.url)
-                    ? { ...l, thumbnail: image, thumbnailSourceUrl: link.url }
+                    ? {
+                        ...l,
+                        thumbnail: image || "",
+                        thumbnailSourceUrl: link.url,
+                        title:
+                          (!l.title ||
+                            l.title === "New link" ||
+                            l.title === l.url) &&
+                          preview.title
+                            ? preview.title
+                            : l.title,
+                        description: l.description || preview.description || "",
+                      }
                     : l,
                 ),
               }));
             setPreviewStatus((s) => ({
               ...s,
               [link.id]: image
-                ? "Preview image found."
-                : "No preview image available. Upload an image instead.",
+                ? "Rich link preview found."
+                : "This page has no preview image. You can upload one.",
             }));
           })
           .catch((error) =>
@@ -438,8 +451,20 @@ function LinkEditor({ site, setSite, notify }) {
                 <p className="muted small">
                   {automaticThumbnail(l.url)
                     ? "YouTube thumbnail is automatic. Upload an image to override it; clear the override to use the video thumbnail."
-                    : "YouTube video links and supported Open Graph pages get automatic thumbnails. For Instagram profiles or posts, upload an image or paste an image URL."}
+                    : "Rich link previews are automatic for web links. Custom images take priority; pages that hide their metadata may need an uploaded image."}
                 </p>
+                {previewSupported(l.url) && (
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={() => {
+                      previewRequests.current.delete(`${l.id}:${l.url}`);
+                      update(l.id, { thumbnail: "", thumbnailSourceUrl: "" });
+                    }}
+                  >
+                    Use automatic rich preview
+                  </button>
+                )}
                 {previewStatus[l.id] && (
                   <p className="muted small" role="status">
                     {previewStatus[l.id]}

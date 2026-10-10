@@ -110,3 +110,57 @@ export async function fetchPreview(value, fetcher = fetch) {
   }
   throw Error("Too many redirects");
 }
+
+// Arbitrary destinations are resolved by a metadata service, never fetched by our server.
+export function publicPreviewUrl(value) {
+  try {
+    const u = new URL(value);
+    if (
+      !["http:", "https:"].includes(u.protocol) ||
+      u.username ||
+      u.password ||
+      u.port ||
+      !u.hostname.includes(".") ||
+      u.hostname.endsWith(".local") ||
+      u.hostname.endsWith(".internal") ||
+      /^[\d.]+$/.test(u.hostname) ||
+      u.hostname.includes(":")
+    )
+      return null;
+    return u;
+  } catch {
+    return null;
+  }
+}
+export async function fetchRichPreview(value, fetcher = fetch) {
+  const url = publicPreviewUrl(value);
+  if (!url) throw Error("Unsupported preview URL");
+  if (allowedPreviewUrl(value)) {
+    try {
+      const image = await fetchPreview(value, fetcher);
+      if (image) return { image };
+    } catch {
+      /* Try the metadata provider when a publisher blocks direct fetching. */
+    }
+  }
+  const endpoint = new URL("https://api.microlink.io/");
+  endpoint.searchParams.set("url", url.href);
+  const response = await fetcher(endpoint.href, {
+    redirect: "error",
+    signal: AbortSignal.timeout(20000),
+  });
+  if (!response.ok)
+    throw Error("Preview service unavailable or daily limit reached");
+  const result = await response.json();
+  if (result.status !== "success") throw Error("Preview unavailable");
+  const data = result.data || {};
+  const imageUrl = publicPreviewUrl(data.image?.url || data.logo?.url);
+  return {
+    image: imageUrl?.protocol === "https:" ? imageUrl.href : null,
+    title: typeof data.title === "string" ? data.title.slice(0, 100) : "",
+    description:
+      typeof data.description === "string"
+        ? data.description.slice(0, 180)
+        : "",
+  };
+}
