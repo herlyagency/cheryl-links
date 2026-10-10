@@ -1690,3 +1690,86 @@ summary {
 .social-row {
   flex-wrap: wrap;
 }
+
+/* Decorative effects never capture clicks or obscure keyboard controls. */
+.public-page {
+  position: relative;
+}
+.celebration {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 5;
+}
+.celebration span {
+  position: absolute;
+  top: -40px;
+  font-size: 24px;
+  animation: celebration-fall var(--duration) linear var(--delay) both;
+}
+.celebration-confetti span {
+  width: 9px;
+  height: 15px;
+  border-radius: 2px;
+}
+.celebration-birthday span {
+  top: auto;
+  bottom: -45px;
+  font-size: 32px;
+  animation-name: celebration-rise;
+}
+.celebration-snow span {
+  color: white !important;
+  text-shadow: 0 1px 3px #555;
+}
+.celebration-demo {
+  position: relative;
+  overflow: hidden;
+  height: 220px;
+  border-radius: 16px;
+  background: #292338;
+  color: white;
+  display: grid;
+  place-items: center;
+  margin: 20px 0;
+}
+@keyframes celebration-fall {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) rotate(0);
+  }
+  8% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    top: 100%;
+    transform: translateX(var(--drift)) rotate(var(--spin));
+  }
+}
+@keyframes celebration-rise {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  8% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    bottom: 100%;
+    transform: translateX(var(--drift));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .celebration {
+    display: none;
+  }
+}

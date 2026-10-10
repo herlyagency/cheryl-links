@@ -325,6 +325,20 @@ export function validateSite(site) {
     !["none", "fade", "rise"].includes(site.theme.animation || "none")
   )
     throw Error("Choose a supported look and motion setting.");
+  if (
+    ![
+      "none",
+      "confetti",
+      "birthday",
+      "snow",
+      "hearts",
+      "halloween",
+      "sparkles",
+    ].includes(site.theme.celebration ?? "none") ||
+    (site.theme.celebrationDuration !== undefined &&
+      ![5, 10, 20].includes(site.theme.celebrationDuration))
+  )
+    throw Error("Choose a supported celebration and duration.");
   if (!site.profile.display_name.trim()) throw Error("Add a display name.");
   if (site.links.length > 50 || site.socials.length > 12)
     throw Error("Use at most 50 links and 12 social icons.");

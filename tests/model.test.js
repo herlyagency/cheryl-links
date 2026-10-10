@@ -172,3 +172,30 @@ test("a YouTube URL pasted into the thumbnail field becomes an image", async () 
     "https://i.ytimg.com/vi/xqpZBSFcitQ/hqdefault.jpg",
   );
 });
+
+test("celebrations validate supported effects and finite durations while retaining older drafts", () => {
+  assert.doesNotThrow(() => validateSite(structuredClone(sample)));
+  for (const celebration of [
+    "none",
+    "confetti",
+    "birthday",
+    "snow",
+    "hearts",
+    "halloween",
+    "sparkles",
+  ]) {
+    const site = structuredClone(sample);
+    site.theme.celebration = celebration;
+    site.theme.celebrationDuration = 20;
+    assert.doesNotThrow(() => validateSite(site));
+  }
+  for (const settings of [
+    { celebration: "unknown" },
+    { celebrationDuration: 100 },
+    { celebrationDuration: "10" },
+  ]) {
+    const site = structuredClone(sample);
+    Object.assign(site.theme, settings);
+    assert.throws(() => validateSite(site), /celebration/);
+  }
+});

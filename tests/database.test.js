@@ -25,6 +25,7 @@ test("Postgres migrations enforce private drafts, atomic publishing, schedules a
       "007_manual_followers.sql",
       "008_social_platforms.sql",
       "009_automatic_payment_icons.sql",
+      "010_celebration_animations.sql",
     ])
       await pg.exec(
         await readFile(
@@ -32,6 +33,34 @@ test("Postgres migrations enforce private drafts, atomic publishing, schedules a
           "utf8",
         ),
       );
+    for (const effect of [
+      "none",
+      "confetti",
+      "birthday",
+      "snow",
+      "hearts",
+      "halloween",
+      "sparkles",
+      "invalid",
+    ]) {
+      const config = structuredClone(sample);
+      config.theme.celebration = effect;
+      config.theme.celebrationDuration = 10;
+      const result = await pg.query(
+        "select public.validate_config($1::jsonb) as valid",
+        [JSON.stringify(config)],
+      );
+      assert.equal(result.rows[0].valid, effect !== "invalid");
+    }
+    for (const duration of [null, "10", 0, 100]) {
+      const config = structuredClone(sample);
+      config.theme.celebrationDuration = duration;
+      const result = await pg.query(
+        "select public.validate_config($1::jsonb) as valid",
+        [JSON.stringify(config)],
+      );
+      assert.equal(result.rows[0].valid, false);
+    }
     await pg.exec(`insert into public.site_owner(user_id) values('${owner}');`);
     await pg.exec("set role service_role");
     await pg.query(
