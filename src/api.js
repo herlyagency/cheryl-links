@@ -95,7 +95,7 @@ export async function fetchLinkPreview(url) {
   });
   if (error)
     throw Error("Link preview unavailable. You can upload an image instead.");
-  return data?.image || null;
+  return data || null;
 }
 export async function syncFollowers() {
   if (!db) return { accounts: [], total: null };

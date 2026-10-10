@@ -240,7 +240,11 @@ function PublicPage({ site, preview = false }) {
             .filter((l) => visible(l, now))
             .map((l) => (
               <a
-                className={"link-card " + (l.featured ? "featured" : "")}
+                className={
+                  "link-card " +
+                  (l.featured ? "featured " : "") +
+                  (linkThumbnail(l) ? "rich-preview" : "")
+                }
                 key={l.id}
                 href={safeUrl(l.url)}
                 target="_blank"
@@ -256,6 +260,11 @@ function PublicPage({ site, preview = false }) {
                   borderRadius: l.radius ?? t.radius,
                 }}
               >
+                {!l.featured && linkThumbnail(l) && (
+                  <div className="rich-preview-image">
+                    <LinkImage src={linkThumbnail(l)} icon={l.icon} />
+                  </div>
+                )}
                 {l.featured && (
                   <span className="featured-label">
                     LATEST & GREATEST <span>↗</span>

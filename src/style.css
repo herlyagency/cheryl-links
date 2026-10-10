@@ -1639,3 +1639,18 @@ summary {
     transition: none !important;
   }
 }
+
+.rich-preview-image {
+  width: 100%;
+  aspect-ratio: 1.91;
+  overflow: hidden;
+  border-radius: 8px;
+  margin-bottom: 14px;
+  display: grid;
+  place-items: center;
+}
+.rich-preview-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

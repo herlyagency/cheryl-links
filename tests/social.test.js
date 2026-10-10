@@ -4,6 +4,8 @@ import {
   allowedPreviewUrl,
   previewImage,
   fetchPreview,
+  fetchRichPreview,
+  publicPreviewUrl,
 } from "../supabase/functions/link-preview/preview.js";
 import {
   countValue,
@@ -15,6 +17,7 @@ import {
   validateSite,
   sample,
   formatFollowers,
+  previewSupported,
 } from "../src/model.js";
 test("Open Graph images handle attribute order, entities, relative paths and unsafe URLs", () => {
   assert.equal(
@@ -146,5 +149,63 @@ test("new moods remain valid with backward-compatible look and motion defaults",
       ...structuredClone(sample),
       theme: { ...sample.theme, animation: "unsafe" },
     }),
+  );
+});
+
+test("rich previews default to public web links through the metadata service", async () => {
+  assert.equal(previewSupported("https://example.org/article"), true);
+  assert.equal(previewSupported("http://example.org/article"), true);
+  for (const url of [
+    "mailto:hello@example.com",
+    "https://127.0.0.1/",
+    "https://localhost/",
+    "https://example.local/",
+    "https://user:pass@example.org/",
+  ]) {
+    assert.equal(previewSupported(url), false);
+    assert.equal(publicPreviewUrl(url), null);
+  }
+  let requested;
+  const preview = await fetchRichPreview(
+    "https://example.org/article",
+    async (url) => {
+      requested = new URL(url);
+      return Response.json({
+        status: "success",
+        data: {
+          title: "Article",
+          description: "Details",
+          image: { url: "https://cdn.example.org/cover.jpg" },
+        },
+      });
+    },
+  );
+  assert.equal(requested.hostname, "api.microlink.io");
+  assert.equal(
+    requested.searchParams.get("url"),
+    "https://example.org/article",
+  );
+  assert.deepEqual(preview, {
+    image: "https://cdn.example.org/cover.jpg",
+    title: "Article",
+    description: "Details",
+  });
+  await assert.rejects(
+    fetchRichPreview(
+      "https://example.org",
+      async () => new Response(null, { status: 429 }),
+    ),
+    /limit/,
+  );
+  assert.equal(
+    (
+      await fetchRichPreview("https://example.org", async () =>
+        Response.json({
+          status: "success",
+          data: { image: { url: "javascript:bad" } },
+        }),
+      )
+    ).image,
+    null,
   );
 });
