@@ -28,6 +28,7 @@ test("Postgres migrations enforce private drafts, atomic publishing, schedules a
       "010_celebration_animations.sql",
       "011_link_highlights.sql",
       "012_highlight_intensity.sql",
+      "013_youtube_live.sql",
     ])
       await pg.exec(
         await readFile(
@@ -35,6 +36,83 @@ test("Postgres migrations enforce private drafts, atomic publishing, schedules a
           "utf8",
         ),
       );
+    const liveId = "cc11aa22-bb33-4dd4-8ee5-ff6677889900";
+    const originalPublished = (
+      await pg.query("select config from public.site_published where id=1")
+    ).rows[0]?.config;
+    const manual = structuredClone(sample);
+    manual.profile.liveMode = "manual";
+    manual.profile.liveUrl = "https://www.youtube.com/@Cherylxxw/live";
+    await pg.query(
+      "insert into public.site_published(id,config) values(1,$1::jsonb) on conflict(id) do update set config=excluded.config",
+      [JSON.stringify(manual)],
+    );
+    assert.ok(
+      (
+        await pg.query("select public.get_public_site() as site")
+      ).rows[0].site.links.some((link) => link.id === liveId),
+    );
+    manual.profile.liveMode = "auto";
+    await pg.query(
+      "update public.site_published set config=$1::jsonb where id=1",
+      [JSON.stringify(manual)],
+    );
+    await pg.query(
+      "update public.youtube_live_cache set result=$1::jsonb,checked_at=now() where id=1",
+      [
+        JSON.stringify({
+          status: "live",
+          url: "https://www.youtube.com/watch?v=abcdefghijk",
+          title: "Live test",
+        }),
+      ],
+    );
+    assert.ok(
+      (
+        await pg.query("select public.get_public_site() as site")
+      ).rows[0].site.links.some((link) => link.id === liveId),
+    );
+    await pg.exec(
+      "update public.youtube_live_cache set checked_at=now()-interval '7 minutes' where id=1",
+    );
+    assert.ok(
+      !(
+        await pg.query("select public.get_public_site() as site")
+      ).rows[0].site.links.some((link) => link.id === liveId),
+    );
+    if (originalPublished)
+      await pg.query(
+        "update public.site_published set config=$1::jsonb where id=1",
+        [JSON.stringify(originalPublished)],
+      );
+    else await pg.exec("delete from public.site_published where id=1");
+    await pg.exec(
+      "update public.youtube_live_cache set result=null,checked_at=null,lease_until=null where id=1; set role anon",
+    );
+    await assert.rejects(pg.query("select * from public.youtube_connection"));
+    await assert.rejects(pg.query("select public.claim_youtube_live_check()"));
+    await pg.exec("reset role; set role service_role");
+    assert.equal(
+      (await pg.query("select public.claim_youtube_live_check() as claimed"))
+        .rows[0].claimed,
+      true,
+    );
+    assert.equal(
+      (await pg.query("select public.claim_youtube_live_check() as claimed"))
+        .rows[0].claimed,
+      false,
+    );
+    await pg.exec("reset role");
+    for (const mode of ["auto", "off", "manual", "unknown"]) {
+      const config = structuredClone(sample);
+      config.profile.liveMode = mode;
+      config.profile.liveUrl = "https://www.youtube.com/@Cherylxxw/live";
+      const result = await pg.query(
+        "select public.validate_config($1::jsonb) as valid",
+        [JSON.stringify(config)],
+      );
+      assert.equal(result.rows[0].valid, mode !== "unknown");
+    }
     for (const highlight of [
       "none",
       "float",

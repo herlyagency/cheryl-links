@@ -37,3 +37,12 @@ export async function followerTotal() {
   if (!response.ok) return null;
   return response.json();
 }
+
+export async function youtubeLiveStatus() {
+  if (!configured) return { status: "setup_required" };
+  const response = await fetch(`${url}/functions/v1/live-status`, {
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!response.ok) throw Error("Live status unavailable");
+  return response.json();
+}

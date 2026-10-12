@@ -1,3 +1,4 @@
+import LiveControls from "./LiveControls";
 import Analytics from "./AnalyticsDashboard";
 import { highlightOptions } from "./highlights";
 import Celebration, { celebrations } from "./Celebration";
@@ -15,6 +16,7 @@ import {
   Link as LinkIcon,
   Palette,
   Sparkles,
+  Radio,
   BarChart3,
   LogOut,
   Eye,
@@ -1350,6 +1352,7 @@ function Admin() {
             ["links", LinkIcon, "My links"],
             ["appearance", Palette, "Appearance"],
             ["animations", Sparkles, "Animations"],
+            ["live", Radio, "Live now"],
             ["analytics", BarChart3, "Analytics"],
             ["share", Share2, "Share & tools"],
           ].map(([key, I, label]) => (
@@ -1397,9 +1400,11 @@ function Admin() {
               Your space <span>/</span>{" "}
               {tab === "links"
                 ? "My links"
-                : tab === "share"
-                  ? "Share & tools"
-                  : tab[0].toUpperCase() + tab.slice(1)}
+                : tab === "live"
+                  ? "Live now"
+                  : tab === "share"
+                    ? "Share & tools"
+                    : tab[0].toUpperCase() + tab.slice(1)}
             </span>
             <h1>
               Good things start here<span>.</span>
@@ -1451,6 +1456,9 @@ function Admin() {
             )}{" "}
             {tab === "animations" && (
               <Animations site={site} setSite={setSite} />
+            )}
+            {tab === "live" && (
+              <LiveControls site={site} setSite={setSite} notify={notify} />
             )}
             {tab === "analytics" && <Analytics site={site} notify={notify} />}{" "}
             {tab === "share" && <Tools site={site} notify={notify} />}

@@ -1,3 +1,4 @@
+import { LIVE_LINK_ID } from "../supabase/functions/_shared/youtube-live.js";
 import { platformLabels, resolvePlatform } from "./social-platforms.js";
 export function sourceLabel(source) {
   const value = String(source || "").trim();
@@ -50,6 +51,14 @@ export function summarize(events, site) {
         platformLabels[resolvePlatform(social.icon, social.url)] ||
         "Social icon",
       kind: "Social icon",
+    });
+  if (clicks.some((click) => click.link_id === LIVE_LINK_ID))
+    destinations.set(LIVE_LINK_ID, {
+      id: LIVE_LINK_ID,
+      title: "Watch Cheryl live",
+      kind: "Live stream",
+      icon: "youtube",
+      url: "https://www.youtube.com/@Cherylxxw/live",
     });
   for (const click of clicks)
     if (!destinations.has(click.link_id))

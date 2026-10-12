@@ -1,3 +1,8 @@
+import { youtubeLiveStatus } from "./public-api";
+import {
+  LIVE_LINK_ID,
+  visibleLive,
+} from "../supabase/functions/_shared/youtube-live.js";
 import { highlightOptions, highlightStyle } from "./highlights";
 import Celebration from "./Celebration";
 import React, { useState, useEffect, useRef } from "react";
@@ -88,6 +93,25 @@ function PublicPage({ site, preview = false }) {
       : t.gradient
         ? `linear-gradient(150deg,${t.background},${t.backgroundEnd})`
         : t.background;
+  const [liveResult, setLiveResult] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    if (["off", "manual"].includes(p.liveMode)) {
+      setLiveResult(null);
+      return;
+    }
+    const load = () =>
+      youtubeLiveStatus()
+        .then((result) => alive && setLiveResult(result))
+        .catch(() => alive && setLiveResult({ status: "unknown" }));
+    load();
+    const timer = setInterval(load, 60000);
+    return () => {
+      alive = false;
+      clearInterval(timer);
+    };
+  }, [p.liveMode]);
+  const live = visibleLive(p, liveResult);
   async function share() {
     try {
       if (navigator.share)
@@ -146,7 +170,7 @@ function PublicPage({ site, preview = false }) {
       <main className="public-content" style={{ maxWidth: t.width }}>
         <header className={"profile " + (t.align === "left" ? "left" : "")}>
           <div
-            className="avatar-ring"
+            className={`avatar-ring ${live ? "avatar-live" : ""}`}
             style={{ width: t.avatarSize + 12, height: t.avatarSize + 12 }}
           >
             <img
@@ -158,6 +182,7 @@ function PublicPage({ site, preview = false }) {
                 e.currentTarget.src = "/avatar.svg";
               }}
             />
+            {live && <span className="avatar-live-label">LIVE</span>}
           </div>
           <p className="eyebrow">MY LITTLE CORNER OF THE INTERNET</p>
           <h1>
@@ -200,13 +225,44 @@ function PublicPage({ site, preview = false }) {
             </p>
           )}
         </header>
+        {live && (
+          <a
+            className="youtube-live-card"
+            href={live.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => !preview && track("link_click", LIVE_LINK_ID)}
+          >
+            {live.thumbnail && (
+              <img
+                src={live.thumbnail}
+                alt=""
+                loading="lazy"
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
+              />
+            )}
+            <div>
+              <span className="live-kicker">
+                <i />
+                LIVE NOW ON YOUTUBE
+              </span>
+              <strong>{live.title}</strong>
+              <span className="live-watch">
+                Watch live <ArrowUpRight size={16} />
+              </span>
+            </div>
+          </a>
+        )}
         <div className="link-heading">
           <span>A FEW PLACES TO FIND ME</span>
           <span className="little-star">✳</span>
         </div>
         <section className="link-list" aria-label="Featured links">
           {links
-            .filter((l) => visible(l, now))
+            .filter((l) => l.id !== LIVE_LINK_ID && visible(l, now))
             .map((l) => (
               <a
                 className={
