@@ -1237,7 +1237,9 @@ function Admin() {
   const [authenticated, setAuthenticated] = useState(!configured),
     [checking, setChecking] = useState(configured),
     [site, setSite] = useState(null),
-    [tab, setTab] = useState("links"),
+    [tab, setTab] = useState(() =>
+      new URLSearchParams(location.search).has("youtube") ? "live" : "links",
+    ),
     [mobile, setMobile] = useState(true),
     [toast, setToast] = useState(null),
     [busy, setBusy] = useState(false),
