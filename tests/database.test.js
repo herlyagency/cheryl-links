@@ -27,6 +27,7 @@ test("Postgres migrations enforce private drafts, atomic publishing, schedules a
       "009_automatic_payment_icons.sql",
       "010_celebration_animations.sql",
       "011_link_highlights.sql",
+      "012_highlight_intensity.sql",
     ])
       await pg.exec(
         await readFile(
@@ -34,7 +35,17 @@ test("Postgres migrations enforce private drafts, atomic publishing, schedules a
           "utf8",
         ),
       );
-    for (const highlight of ["none", "float", "shine", "glow", "invalid"]) {
+    for (const highlight of [
+      "none",
+      "float",
+      "bounce",
+      "wiggle",
+      "pulse",
+      "tilt",
+      "shine",
+      "glow",
+      "invalid",
+    ]) {
       const config = structuredClone(sample);
       config.links[0].highlight = highlight;
       const result = await pg.query(
@@ -42,6 +53,15 @@ test("Postgres migrations enforce private drafts, atomic publishing, schedules a
         [JSON.stringify(config)],
       );
       assert.equal(result.rows[0].valid, highlight !== "invalid");
+    }
+    for (const intensity of [1, 5, 0, 6, 2.5, "3", null]) {
+      const config = structuredClone(sample);
+      config.links[0].highlightIntensity = intensity;
+      const result = await pg.query(
+        "select public.validate_config($1::jsonb) as valid",
+        [JSON.stringify(config)],
+      );
+      assert.equal(result.rows[0].valid, intensity === 1 || intensity === 5);
     }
     for (const effect of [
       "none",

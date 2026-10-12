@@ -1837,10 +1837,18 @@ summary {
 .animation-rise {
   --link-entry: page-rise;
 }
-.public-page .link-card.highlight-float {
+.public-page
+  .link-card:is(
+    .highlight-float,
+    .highlight-bounce,
+    .highlight-wiggle,
+    .highlight-pulse,
+    .highlight-tilt
+  ) {
   animation:
     var(--link-entry, page-still) 0.65s ease both,
-    link-float 3.6s ease-in-out 1s infinite;
+    var(--highlight-motion, link-float) var(--highlight-period, 3.6s)
+      ease-in-out 1s infinite;
 }
 .link-highlight {
   position: absolute;
@@ -1862,11 +1870,12 @@ summary {
     #ffffff70 49%,
     transparent 55%
   );
-  animation: link-shine 4.5s ease-in-out infinite;
+  opacity: var(--highlight-brightness, 0.38);
+  animation: link-shine var(--highlight-period, 3.6s) ease-in-out infinite;
 }
 .highlight-glow .link-highlight {
   border: 2px solid var(--accent);
-  animation: link-glow 3s ease-in-out infinite;
+  animation: link-glow var(--highlight-period, 3.6s) ease-in-out infinite;
 }
 .link-card:is(:hover, :focus-visible),
 .link-card:is(:hover, :focus-visible) .link-highlight,
@@ -1879,7 +1888,7 @@ summary {
     translate: 0 0;
   }
   50% {
-    translate: 0 -4px;
+    translate: 0 calc(-1 * var(--highlight-distance, 4px));
   }
 }
 @keyframes link-shine {
@@ -1895,12 +1904,12 @@ summary {
 @keyframes link-glow {
   0%,
   100% {
-    opacity: 0.35;
+    opacity: calc(var(--highlight-brightness, 0.38) * 0.35);
     box-shadow: inset 0 0 3px var(--accent);
   }
   50% {
-    opacity: 1;
-    box-shadow: inset 0 0 15px var(--accent);
+    opacity: var(--highlight-brightness, 0.38);
+    box-shadow: inset 0 0 var(--highlight-blur, 11px) var(--accent);
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1922,5 +1931,102 @@ summary {
   }
   to {
     opacity: 1;
+  }
+}
+
+.highlight-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  align-items: start;
+}
+.highlight-controls input[type="range"] {
+  width: 100%;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  accent-color: #34c759;
+  cursor: pointer;
+  background: transparent;
+}
+.highlight-controls input[type="range"]:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.intensity-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #706b60;
+}
+.highlight-bounce {
+  --highlight-motion: link-bounce;
+}
+.highlight-wiggle {
+  --highlight-motion: link-wiggle;
+}
+.highlight-pulse {
+  --highlight-motion: link-pulse;
+}
+.highlight-tilt {
+  --highlight-motion: link-tilt;
+}
+@keyframes link-bounce {
+  0%,
+  20%,
+  55%,
+  100% {
+    translate: 0 0;
+  }
+  35% {
+    translate: 0 calc(-1.2 * var(--highlight-distance));
+  }
+  45% {
+    translate: 0 calc(-0.5 * var(--highlight-distance));
+  }
+}
+@keyframes link-wiggle {
+  0%,
+  15%,
+  55%,
+  100% {
+    translate: 0 0;
+  }
+  25%,
+  45% {
+    translate: calc(-0.6 * var(--highlight-distance)) 0;
+  }
+  35% {
+    translate: calc(0.6 * var(--highlight-distance)) 0;
+  }
+}
+@keyframes link-pulse {
+  0%,
+  100% {
+    scale: 1;
+  }
+  50% {
+    scale: var(--highlight-scale);
+  }
+}
+@keyframes link-tilt {
+  0%,
+  15%,
+  55%,
+  100% {
+    rotate: 0deg;
+  }
+  25%,
+  45% {
+    rotate: calc(-1 * var(--highlight-angle));
+  }
+  35% {
+    rotate: var(--highlight-angle);
+  }
+}
+@media (max-width: 600px) {
+  .highlight-controls {
+    grid-template-columns: 1fr;
+    gap: 0;
   }
 }

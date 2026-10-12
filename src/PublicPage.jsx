@@ -1,3 +1,4 @@
+import { highlightOptions, highlightStyle } from "./highlights";
 import Celebration from "./Celebration";
 import React, { useState, useEffect, useRef } from "react";
 import { Heart, Share2, Check, ArrowUpRight } from "lucide-react";
@@ -209,7 +210,7 @@ function PublicPage({ site, preview = false }) {
             .map((l) => (
               <a
                 className={
-                  `link-card highlight-${["float", "shine", "glow"].includes(l.highlight) ? l.highlight : "none"} ` +
+                  `link-card highlight-${Object.hasOwn(highlightOptions, l.highlight) ? l.highlight : "none"} ` +
                   (l.featured ? "featured " : "") +
                   (linkThumbnail(l) ? "rich-preview" : "")
                 }
@@ -219,6 +220,7 @@ function PublicPage({ site, preview = false }) {
                 rel="noopener noreferrer"
                 onClick={() => !preview && track("link_click", l.id)}
                 style={{
+                  ...highlightStyle(l),
                   background:
                     l.backgroundImage && safeUrl(l.backgroundImage, true)
                       ? `linear-gradient(${l.background || t.card}ee,${l.background || t.card}ee),url("${safeUrl(l.backgroundImage, true)}") center/cover`
