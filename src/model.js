@@ -392,6 +392,8 @@ export function validateSite(site) {
       );
   }
   for (const l of site.links) {
+    if (!["none", "float", "shine", "glow"].includes(l.highlight ?? "none"))
+      throw Error("Choose a supported link highlight.");
     if (!l.title.trim()) throw Error("Every link needs a title.");
     if (
       (l.start && !Number.isFinite(Date.parse(l.start))) ||

@@ -26,6 +26,7 @@ test("Postgres migrations enforce private drafts, atomic publishing, schedules a
       "008_social_platforms.sql",
       "009_automatic_payment_icons.sql",
       "010_celebration_animations.sql",
+      "011_link_highlights.sql",
     ])
       await pg.exec(
         await readFile(
@@ -33,6 +34,15 @@ test("Postgres migrations enforce private drafts, atomic publishing, schedules a
           "utf8",
         ),
       );
+    for (const highlight of ["none", "float", "shine", "glow", "invalid"]) {
+      const config = structuredClone(sample);
+      config.links[0].highlight = highlight;
+      const result = await pg.query(
+        "select public.validate_config($1::jsonb) as valid",
+        [JSON.stringify(config)],
+      );
+      assert.equal(result.rows[0].valid, highlight !== "invalid");
+    }
     for (const effect of [
       "none",
       "confetti",

@@ -67,16 +67,17 @@ function Field({ label, children, ...props }) {
     </label>
   );
 }
-function Toggle({ label, value, onChange }) {
+function Toggle({ label, value, onChange, compact = false }) {
   return (
-    <label className="toggle">
+    <label className={`toggle ${compact ? "toggle-compact" : ""}`}>
       <input
         type="checkbox"
+        role="switch"
         aria-label={label}
         checked={!!value}
         onChange={(e) => onChange(e.target.checked)}
       />
-      <span>{label}</span>
+      <span className="toggle-label">{label}</span>
     </label>
   );
 }
@@ -286,6 +287,7 @@ function LinkEditor({ site, setSite, notify }) {
                   icon: "globe",
                   active: false,
                   featured: false,
+                  highlight: "none",
                   start: "",
                   end: "",
                   background: "",
@@ -398,6 +400,23 @@ function LinkEditor({ site, setSite, notify }) {
                     onChange={(v) => update(l.id, { featured: v })}
                   />
                 </div>
+                <Field label="Link highlight">
+                  <select
+                    value={l.highlight || "none"}
+                    onChange={(e) =>
+                      update(l.id, { highlight: e.target.value })
+                    }
+                  >
+                    <option value="none">None</option>
+                    <option value="float">Gentle movement</option>
+                    <option value="shine">Shine sweep</option>
+                    <option value="glow">Pulsing glow</option>
+                  </select>
+                </Field>
+                <p className="small muted">
+                  Draw attention to this link. Effects pause while hovering or
+                  focusing and respect reduced motion preferences.
+                </p>
                 <div className="two-columns">
                   <Field
                     label="Background (blank = theme)"
@@ -741,11 +760,11 @@ function SocialEditor({ site, setSite }) {
               }
             />
           </label>
-          <input
-            type="checkbox"
-            aria-label="Show social icon"
-            checked={s.active}
-            onChange={(e) => change(s.id, { active: e.target.checked })}
+          <Toggle
+            label="Show social icon"
+            compact
+            value={s.active}
+            onChange={(value) => change(s.id, { active: value })}
           />
           <button
             className="icon-button"
