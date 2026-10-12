@@ -366,6 +366,14 @@ function PublicPage({ site, preview = false }) {
           )}
         </footer>
       </main>
+      <a
+        className="design-credit"
+        href="https://moowomedia.com"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Custom designs by Moowo Media
+      </a>
       {shareMessage && <div className="toast">{shareMessage}</div>}
       {!preview && enabled && !choice && (
         <div className="consent">
