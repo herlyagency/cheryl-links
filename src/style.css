@@ -2030,3 +2030,136 @@ summary {
     gap: 0;
   }
 }
+
+.analytics-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.analytics-empty {
+  padding: 20px 24px;
+  background: #f4f0e7;
+  border-radius: 16px;
+  margin-bottom: 20px;
+}
+.metric-help {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #706b60;
+  margin: 10px 0;
+}
+.destination-legend {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #706b60;
+  padding-bottom: 12px;
+}
+.destination-row {
+  padding: 18px 0;
+  border-top: 1px solid #eee9e1;
+}
+.destination-main {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.destination-rank {
+  width: 20px;
+  font-size: 12px;
+  color: #8a8379;
+  flex-shrink: 0;
+}
+.destination-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #f3efe7;
+  display: grid;
+  place-items: center;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.destination-thumb img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.destination-thumb svg {
+  width: 22px;
+  height: 22px;
+}
+.destination-name {
+  flex: 1;
+  min-width: 0;
+}
+.destination-name strong {
+  display: block;
+  font-size: 14px;
+}
+.destination-name small {
+  display: block;
+  font-size: 11px;
+  color: #706b60;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 5px;
+}
+.destination-numbers {
+  display: flex;
+  text-align: right;
+  gap: 22px;
+  flex-shrink: 0;
+}
+.destination-numbers small {
+  display: block;
+  color: #8a8379;
+  font-size: 10px;
+  font-weight: normal;
+  margin-top: 4px;
+}
+.destination-row details {
+  font-size: 12px;
+  margin-top: 12px;
+}
+.destination-row .breakdown {
+  margin-top: 14px;
+}
+@media (max-width: 700px) {
+  .analytics-destinations .panel-heading {
+    display: block;
+  }
+  .destination-main {
+    flex-wrap: wrap;
+  }
+  .destination-name {
+    flex-basis: calc(100% - 100px);
+  }
+  .destination-numbers {
+    width: 100%;
+    justify-content: space-between;
+    text-align: left;
+    padding-left: 32px;
+  }
+  .destination-legend {
+    display: none;
+  }
+  .analytics-actions select {
+    max-width: 100%;
+  }
+}
+
+.metric-grid .metric > span {
+  font-size: 12px;
+  color: #706b60;
+}
+.metric-grid .metric > small {
+  font-size: 11px;
+  color: #706b60;
+}

@@ -226,3 +226,8 @@ In Admin → My links, expand a link and choose Link highlight: None, Gentle mov
 
 ### Highlight intensity
 Link highlights also include Bounce, Side-to-side wiggle, Size pulse, and Playful tilt. The adjacent 1–5 slider controls each link independently: higher levels increase movement, rotation, size changes, and shine/glow strength. The cycle becomes slightly quicker, with a minimum duration of 2.7 seconds. Older links default to level 2. None disables the slider while retaining its value. Migration 012 validates the new effects and whole-number intensity range.
+
+## Analytics dashboard
+Admin → Analytics shows visitors (anonymous browser IDs), visits (page opens), link clicks, and the percentage of recorded visitors who clicked a destination. Repeat clicks no longer inflate that engagement percentage. “Which links get clicked?” ranks link cards and social icons with counts, unique clickers, and share of all clicks; removed destinations remain visible for historical activity. Filter by destination type and expand each row to see arrival sources.
+
+Refresh loads the selected range and the preceding equally long period. Comparisons are unavailable outside the 90-day retention window or when results are incomplete. Source labels explain direct/unavailable referrers; device and daily counts have plain-language labels. CSV exports include readable destination names. Only existing consented/verified events are used; no cursor tracking or additional collection is introduced. No migration or function deployment is needed.
