@@ -118,3 +118,21 @@ export async function loadFollowers() {
   if (error) throw Error("Run migration 006 to enable follower sync.");
   return data || { accounts: [], total: null };
 }
+
+export async function youtubeConnection(action = "status") {
+  if (!db)
+    return {
+      configured: false,
+      connected: false,
+      callback:
+        "https://xsvtainakcubyoqlrmcy.supabase.co/functions/v1/youtube-connect",
+    };
+  const { data, error } = await db.functions.invoke("youtube-connect", {
+    body: { action },
+  });
+  if (error)
+    throw Error(
+      "YouTube connection unavailable. Check migration 013 and the function setup.",
+    );
+  return data;
+}

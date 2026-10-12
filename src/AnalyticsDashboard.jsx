@@ -303,6 +303,7 @@ export default function Analytics({ site, notify, loadStats = stats }) {
                     <option>Link card</option>
                     <option>Social icon</option>
                     <option>Historical link</option>
+                    <option>Live stream</option>
                   </select>
                   <select
                     aria-label="Sort links"

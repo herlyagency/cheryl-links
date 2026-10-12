@@ -1,3 +1,4 @@
+import { liveUrl } from "../supabase/functions/_shared/youtube-live.js";
 import { highlightOptions } from "./highlights.js";
 import { platformLabels, isPaymentPlatform } from "./social-platforms.js";
 export const presets = {
@@ -340,6 +341,10 @@ export function validateSite(site) {
       ![5, 10, 20].includes(site.theme.celebrationDuration))
   )
     throw Error("Choose a supported celebration and duration.");
+  if (!["auto", "manual", "off"].includes(site.profile.liveMode ?? "auto"))
+    throw Error("Choose a supported Live now mode.");
+  if (site.profile.liveMode === "manual" && !liveUrl(site.profile.liveUrl))
+    throw Error("Add a valid YouTube live or video URL.");
   if (!site.profile.display_name.trim()) throw Error("Add a display name.");
   if (site.links.length > 50 || site.socials.length > 12)
     throw Error("Use at most 50 links and 12 social icons.");

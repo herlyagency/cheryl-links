@@ -12,3 +12,10 @@ verify_jwt = false
 # Social crawlers fetch this public PNG without a user session.
 [functions.share-preview]
 verify_jwt = false
+
+[functions.youtube-connect]
+verify_jwt = false
+# Owner JWTs are verified inside POST handlers; callback verifies a one-use state.
+[functions.live-status]
+verify_jwt = false
+# Public read endpoint with a shared private three-minute cache and atomic lease.
