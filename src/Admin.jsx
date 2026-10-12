@@ -1,3 +1,4 @@
+import { highlightOptions } from "./highlights";
 import Celebration, { celebrations } from "./Celebration";
 import React, { useState, useEffect, useRef } from "react";
 import {
@@ -288,6 +289,7 @@ function LinkEditor({ site, setSite, notify }) {
                   active: false,
                   featured: false,
                   highlight: "none",
+                  highlightIntensity: 2,
                   start: "",
                   end: "",
                   background: "",
@@ -400,19 +402,44 @@ function LinkEditor({ site, setSite, notify }) {
                     onChange={(v) => update(l.id, { featured: v })}
                   />
                 </div>
-                <Field label="Link highlight">
-                  <select
-                    value={l.highlight || "none"}
-                    onChange={(e) =>
-                      update(l.id, { highlight: e.target.value })
-                    }
-                  >
-                    <option value="none">None</option>
-                    <option value="float">Gentle movement</option>
-                    <option value="shine">Shine sweep</option>
-                    <option value="glow">Pulsing glow</option>
-                  </select>
-                </Field>
+                <div className="highlight-controls">
+                  <Field label="Link highlight">
+                    <select
+                      value={l.highlight || "none"}
+                      onChange={(e) =>
+                        update(l.id, { highlight: e.target.value })
+                      }
+                    >
+                      {Object.entries(highlightOptions).map(
+                        ([value, label]) => (
+                          <option key={value} value={value}>
+                            {label}
+                          </option>
+                        ),
+                      )}
+                    </select>
+                  </Field>
+                  <Field label={`Intensity · ${l.highlightIntensity ?? 2}/5`}>
+                    <input
+                      type="range"
+                      aria-label="Highlight intensity"
+                      min="1"
+                      max="5"
+                      step="1"
+                      value={l.highlightIntensity ?? 2}
+                      disabled={!l.highlight || l.highlight === "none"}
+                      onChange={(e) =>
+                        update(l.id, {
+                          highlightIntensity: Number(e.target.value),
+                        })
+                      }
+                    />
+                    <span className="intensity-labels">
+                      <span>Subtle</span>
+                      <span>Dramatic</span>
+                    </span>
+                  </Field>
+                </div>
                 <p className="small muted">
                   Draw attention to this link. Effects pause while hovering or
                   focusing and respect reduced motion preferences.

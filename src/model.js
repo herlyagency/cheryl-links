@@ -1,3 +1,4 @@
+import { highlightOptions } from "./highlights.js";
 import { platformLabels, isPaymentPlatform } from "./social-platforms.js";
 export const presets = {
   "Minimal Light": {
@@ -392,8 +393,15 @@ export function validateSite(site) {
       );
   }
   for (const l of site.links) {
-    if (!["none", "float", "shine", "glow"].includes(l.highlight ?? "none"))
+    if (!Object.hasOwn(highlightOptions, l.highlight ?? "none"))
       throw Error("Choose a supported link highlight.");
+    if (
+      l.highlightIntensity !== undefined &&
+      (!Number.isInteger(l.highlightIntensity) ||
+        l.highlightIntensity < 1 ||
+        l.highlightIntensity > 5)
+    )
+      throw Error("Highlight intensity must be a whole number from 1 to 5.");
     if (!l.title.trim()) throw Error("Every link needs a title.");
     if (
       (l.start && !Number.isFinite(Date.parse(l.start))) ||

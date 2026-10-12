@@ -223,3 +223,6 @@ Deploy with `supabase functions deploy share-preview --project-ref xsvtainakcuby
 
 ## Per-link highlights and switches
 In Admin → My links, expand a link and choose Link highlight: None, Gentle movement, Shine sweep, or Pulsing glow. Highlights work on regular and featured cards, pause on hover or keyboard focus, and respect reduced-motion preferences. Save and publish to update the public page. Migration 011 validates optional highlight values without changing older links. Admin checkbox controls use native keyboard-operable switches with rounded tracks, green on states, sliding knobs, and visible focus rings.
+
+### Highlight intensity
+Link highlights also include Bounce, Side-to-side wiggle, Size pulse, and Playful tilt. The adjacent 1–5 slider controls each link independently: higher levels increase movement, rotation, size changes, and shine/glow strength. The cycle becomes slightly quicker, with a minimum duration of 2.7 seconds. Older links default to level 2. None disables the slider while retaining its value. Migration 012 validates the new effects and whole-number intensity range.
