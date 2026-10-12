@@ -731,7 +731,8 @@ h3 {
   color: #706b60;
   cursor: pointer;
 }
-.editor-link-top .toggle span {
+.editor-link-top .toggle-label,
+.toggle-compact .toggle-label {
   display: none;
 }
 .icon-button {
@@ -1781,4 +1782,145 @@ summary {
   object-fit: contain;
   border-radius: 16px;
   margin: 16px 0;
+}
+
+/* Apple-style switches retain native keyboard and accessible switch semantics. */
+.toggle input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  width: 44px;
+  height: 26px;
+  min-width: 44px;
+  margin: 0;
+  border: 0;
+  border-radius: 999px;
+  background: #d9d9de;
+  box-shadow: inset 0 1px 3px #00000012;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.toggle input[type="checkbox"]::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 1px 4px #00000030;
+  transition: transform 0.2s ease;
+}
+.toggle input[type="checkbox"]:checked {
+  background: #34c759;
+}
+.toggle input[type="checkbox"]:checked::before {
+  transform: translateX(18px);
+}
+.toggle input[type="checkbox"]:focus-visible {
+  outline: 3px solid #007aff;
+  outline-offset: 3px;
+}
+.toggle {
+  min-height: 44px;
+}
+.social-editor .toggle {
+  flex: 0 0 44px;
+}
+.link-card {
+  position: relative;
+}
+.animation-fade {
+  --link-entry: page-fade;
+}
+.animation-rise {
+  --link-entry: page-rise;
+}
+.public-page .link-card.highlight-float {
+  animation:
+    var(--link-entry, page-still) 0.65s ease both,
+    link-float 3.6s ease-in-out 1s infinite;
+}
+.link-highlight {
+  position: absolute;
+  inset: 2px;
+  z-index: 2;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.highlight-shine .link-highlight {
+  overflow: hidden;
+}
+.highlight-shine .link-highlight::after {
+  content: "";
+  position: absolute;
+  inset: -60% -100%;
+  background: linear-gradient(
+    110deg,
+    transparent 43%,
+    #ffffff70 49%,
+    transparent 55%
+  );
+  animation: link-shine 4.5s ease-in-out infinite;
+}
+.highlight-glow .link-highlight {
+  border: 2px solid var(--accent);
+  animation: link-glow 3s ease-in-out infinite;
+}
+.link-card:is(:hover, :focus-visible),
+.link-card:is(:hover, :focus-visible) .link-highlight,
+.link-card:is(:hover, :focus-visible) .link-highlight::after {
+  animation-play-state: paused;
+}
+@keyframes link-float {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -4px;
+  }
+}
+@keyframes link-shine {
+  0%,
+  20% {
+    transform: translateX(-60%);
+  }
+  65%,
+  100% {
+    transform: translateX(60%);
+  }
+}
+@keyframes link-glow {
+  0%,
+  100% {
+    opacity: 0.35;
+    box-shadow: inset 0 0 3px var(--accent);
+  }
+  50% {
+    opacity: 1;
+    box-shadow: inset 0 0 15px var(--accent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .toggle input[type="checkbox"],
+  .toggle input[type="checkbox"]::before {
+    transition: none;
+  }
+  .highlight-shine .link-highlight {
+    display: none;
+  }
+  .highlight-glow .link-highlight {
+    opacity: 0.65;
+  }
+}
+
+@keyframes page-still {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+  }
 }

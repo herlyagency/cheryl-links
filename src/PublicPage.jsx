@@ -209,7 +209,7 @@ function PublicPage({ site, preview = false }) {
             .map((l) => (
               <a
                 className={
-                  "link-card " +
+                  `link-card highlight-${["float", "shine", "glow"].includes(l.highlight) ? l.highlight : "none"} ` +
                   (l.featured ? "featured " : "") +
                   (linkThumbnail(l) ? "rich-preview" : "")
                 }
@@ -228,6 +228,9 @@ function PublicPage({ site, preview = false }) {
                   borderRadius: l.radius ?? t.radius,
                 }}
               >
+                {["shine", "glow"].includes(l.highlight) && (
+                  <span className="link-highlight" aria-hidden="true" />
+                )}
                 {!l.featured && linkThumbnail(l) && (
                   <div className="rich-preview-image">
                     <LinkImage

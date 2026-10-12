@@ -199,3 +199,14 @@ test("celebrations validate supported effects and finite durations while retaini
     assert.throws(() => validateSite(site), /celebration/);
   }
 });
+
+test("per-link highlights validate without changing older links", () => {
+  for (const highlight of [undefined, "none", "float", "shine", "glow"]) {
+    const site = structuredClone(sample);
+    site.links[0].highlight = highlight;
+    assert.doesNotThrow(() => validateSite(site));
+  }
+  const site = structuredClone(sample);
+  site.links[0].highlight = "unknown";
+  assert.throws(() => validateSite(site), /highlight/);
+});
