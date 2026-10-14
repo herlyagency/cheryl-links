@@ -398,6 +398,26 @@ export function validateSite(site) {
       );
   }
   for (const l of site.links) {
+    if (
+      l.discountEnabled !== undefined &&
+      typeof l.discountEnabled !== "boolean"
+    )
+      throw Error("Choose whether to show the discount badge.");
+    if (
+      l.discountText !== undefined &&
+      (typeof l.discountText !== "string" || l.discountText.length > 30)
+    )
+      throw Error("Discount text must be at most 30 characters.");
+    if (
+      !["coral", "lime", "gold", "pink", "dark"].includes(
+        l.discountColor ?? "coral",
+      )
+    )
+      throw Error("Choose a supported discount color.");
+    if (
+      !["bold", "rounded", "serif", "mono"].includes(l.discountFont ?? "bold")
+    )
+      throw Error("Choose a supported discount typography.");
     if (!Object.hasOwn(highlightOptions, l.highlight ?? "none"))
       throw Error("Choose a supported link highlight.");
     if (

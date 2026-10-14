@@ -1,3 +1,4 @@
+import DiscountBadge, { discountFonts, discountColors } from "./DiscountBadge";
 import LiveControls from "./LiveControls";
 import Analytics from "./AnalyticsDashboard";
 import { highlightOptions } from "./highlights";
@@ -401,6 +402,71 @@ function LinkEditor({ site, setSite, notify }) {
                     value={l.featured}
                     onChange={(v) => update(l.id, { featured: v })}
                   />
+                </div>
+                <div className="discount-controls">
+                  <Toggle
+                    label="Show discount badge"
+                    value={l.discountEnabled}
+                    onChange={(v) =>
+                      update(l.id, {
+                        discountEnabled: v,
+                        discountText: l.discountText || "10% OFF",
+                      })
+                    }
+                  />
+                  {l.discountEnabled && (
+                    <>
+                      <Field
+                        label="Discount text"
+                        value={l.discountText || ""}
+                        maxLength={30}
+                        placeholder="10% OFF, FREE, BUY 1 GET 1…"
+                        onChange={(e) =>
+                          update(l.id, { discountText: e.target.value })
+                        }
+                      />
+                      <div className="two-columns">
+                        <Field label="Badge color">
+                          <select
+                            value={l.discountColor || "coral"}
+                            onChange={(e) =>
+                              update(l.id, { discountColor: e.target.value })
+                            }
+                          >
+                            {Object.keys(discountColors).map((color) => (
+                              <option key={color} value={color}>
+                                {color[0].toUpperCase() + color.slice(1)}
+                              </option>
+                            ))}
+                          </select>
+                        </Field>
+                        <Field label="Badge typography">
+                          <select
+                            value={l.discountFont || "bold"}
+                            onChange={(e) =>
+                              update(l.id, { discountFont: e.target.value })
+                            }
+                          >
+                            {Object.entries(discountFonts).map(
+                              ([font, label]) => (
+                                <option key={font} value={font}>
+                                  {label}
+                                </option>
+                              ),
+                            )}
+                          </select>
+                        </Field>
+                      </div>
+                      <div className="discount-preview">
+                        <span className="small muted">Badge preview</span>
+                        <DiscountBadge link={l} />
+                      </div>
+                      <p className="small muted">
+                        Displays an offer on the link. Discounts are applied by
+                        the destination website.
+                      </p>
+                    </>
+                  )}
                 </div>
                 <div className="highlight-controls">
                   <Field label="Link highlight">
