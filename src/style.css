@@ -2275,3 +2275,47 @@ summary {
   outline-offset: 4px;
   border-radius: 2px;
 }
+
+.discount-controls {
+  padding: 16px;
+  border: 1px solid #75695324;
+  border-radius: 14px;
+  display: grid;
+  gap: 12px;
+}
+.discount-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.discount-badge,
+.card-copy > .discount-badge {
+  display: inline-block;
+  opacity: 1;
+  margin-top: 8px;
+  padding: 5px 10px;
+  border-radius: 7px;
+  font-size: 11px;
+  line-height: 1.3;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.discount-font-bold {
+  font-family: Inter, system-ui, sans-serif;
+}
+.discount-font-rounded {
+  font-family: ui-rounded, "Arial Rounded MT Bold", system-ui, sans-serif;
+  border-radius: 99px !important;
+}
+.discount-font-serif {
+  font-family: Georgia, serif;
+  font-style: italic;
+  letter-spacing: 0 !important;
+  font-size: 13px !important;
+}
+.discount-font-mono {
+  font-family: ui-monospace, Menlo, monospace;
+}

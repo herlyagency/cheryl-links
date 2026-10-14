@@ -1,3 +1,4 @@
+import DiscountBadge from "./DiscountBadge";
 import { youtubeLiveStatus } from "./public-api";
 import {
   LIVE_LINK_ID,
@@ -314,6 +315,7 @@ function PublicPage({ site, preview = false }) {
                   </span>
                   <span className="card-copy">
                     <strong>{l.title}</strong>
+                    <DiscountBadge link={l} />
                     {l.description && <span>{l.description}</span>}
                   </span>
                   <ArrowUpRight size={18} className="card-arrow" />

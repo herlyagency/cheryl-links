@@ -29,6 +29,7 @@ test("Postgres migrations enforce private drafts, atomic publishing, schedules a
       "011_link_highlights.sql",
       "012_highlight_intensity.sql",
       "013_youtube_live.sql",
+      "014_link_discounts.sql",
     ])
       await pg.exec(
         await readFile(
@@ -36,6 +37,28 @@ test("Postgres migrations enforce private drafts, atomic publishing, schedules a
           "utf8",
         ),
       );
+    const discount = structuredClone(sample);
+    Object.assign(discount.links[0], {
+      discountEnabled: true,
+      discountText: "10% OFF",
+      discountColor: "lime",
+      discountFont: "rounded",
+    });
+    const valid = async () =>
+      (
+        await pg.query("select public.validate_config($1::jsonb) as valid", [
+          JSON.stringify(discount),
+        ])
+      ).rows[0].valid;
+    assert.equal(await valid(), true);
+    discount.links[0].discountText = "x".repeat(31);
+    assert.equal(await valid(), false);
+    discount.links[0].discountText = "FREE";
+    discount.links[0].discountColor = "invalid";
+    assert.equal(await valid(), false);
+    discount.links[0].discountColor = "coral";
+    discount.links[0].discountEnabled = "true";
+    assert.equal(await valid(), false);
     const liveId = "cc11aa22-bb33-4dd4-8ee5-ff6677889900";
     const originalPublished = (
       await pg.query("select config from public.site_published where id=1")
