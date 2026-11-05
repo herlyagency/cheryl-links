@@ -40,9 +40,13 @@ await rm('.public-snapshot', {recursive:true, force:true});
 await mkdir('.public-snapshot', {recursive:true});
 for (const name of ['site.json','media','social-preview.png']) await cp(`dist/${name}`, `.public-snapshot/${name}`, {recursive:true});
 } catch (error) {
- const previous = JSON.parse(await readFile('.public-snapshot/site.json','utf8').catch(() => { throw new Error(`No complete public snapshot available. Restore Supabase access for the first export. ${error.message}`); }));
+ let backup = '.public-snapshot';
+ let raw;
+ try { raw = await readFile(`${backup}/site.json`, 'utf8'); }
+ catch { backup = 'public-backup'; raw = await readFile(`${backup}/site.json`, 'utf8'); }
+ const previous = JSON.parse(raw);
  if (!previous?.profile || !Array.isArray(previous.links)) throw Error('Invalid backup snapshot');
- for (const name of ['site.json','media','social-preview.png']) await cp(`.public-snapshot/${name}`, `dist/${name}`, {recursive:true});
+ for (const name of ['site.json','media','social-preview.png']) await cp(`${backup}/${name}`, `dist/${name}`, {recursive:true});
  console.warn('Supabase export unavailable; deploying the last successful public snapshot.');
 }
 for (const file of ['dist/index.html','dist/admin/index.html','dist/404.html']) {
