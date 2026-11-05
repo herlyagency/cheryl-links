@@ -65,7 +65,14 @@ export async function upload(file) {
     bitmap.close();
     throw Error("Maximum image size is 4096 × 4096.");
   }
+  const canvas = document.createElement("canvas");
+  const scale = Math.min(1, 1200 / Math.max(bitmap.width, bitmap.height));
+  canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+  canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+  canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
   bitmap.close();
+  const compressed = await new Promise(resolve => canvas.toBlob(resolve, "image/webp", 0.82));
+  if (compressed && compressed.size < file.size) file = compressed;
   const path =
     crypto.randomUUID() +
     "." +
