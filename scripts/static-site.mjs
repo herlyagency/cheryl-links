@@ -1,5 +1,5 @@
 // Fail before deployment if a complete public snapshot cannot be produced.
-import { mkdir, writeFile, readFile } from 'node:fs/promises';
+import { mkdir, writeFile, readFile, cp, rm } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 const origin = process.env.VITE_SUPABASE_URL;
 const key = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -9,6 +9,7 @@ async function fetchChecked(url, options = {}) {
  if (!r.ok) throw Error(`Snapshot request failed: ${r.status}`);
  return r;
 }
+try {
 const site = await (await fetchChecked(`${origin}/rest/v1/rpc/get_public_site`, {method:'POST',headers:{apikey:key,'Content-Type':'application/json'},body:'{}'})).json();
 if (!site?.profile || !Array.isArray(site.links)) throw Error('No published site');
 await mkdir('dist/media', {recursive:true});
@@ -35,6 +36,15 @@ await writeFile('dist/site.json', JSON.stringify(site));
 const preview = await fetchChecked(`${origin}/functions/v1/share-preview`);
 if (!preview.headers.get('content-type')?.startsWith('image/png')) throw Error('Invalid sharing preview');
 await writeFile('dist/social-preview.png', Buffer.from(await preview.arrayBuffer()));
+await rm('.public-snapshot', {recursive:true, force:true});
+await mkdir('.public-snapshot', {recursive:true});
+for (const name of ['site.json','media','social-preview.png']) await cp(`dist/${name}`, `.public-snapshot/${name}`, {recursive:true});
+} catch (error) {
+ const previous = JSON.parse(await readFile('.public-snapshot/site.json','utf8').catch(() => { throw new Error(`No complete public snapshot available. Restore Supabase access for the first export. ${error.message}`); }));
+ if (!previous?.profile || !Array.isArray(previous.links)) throw Error('Invalid backup snapshot');
+ for (const name of ['site.json','media','social-preview.png']) await cp(`.public-snapshot/${name}`, `dist/${name}`, {recursive:true});
+ console.warn('Supabase export unavailable; deploying the last successful public snapshot.');
+}
 for (const file of ['dist/index.html','dist/admin/index.html','dist/404.html']) {
  try { const html = await readFile(file,'utf8'); await writeFile(file,html.replaceAll(`${origin}/functions/v1/share-preview`,'https://cherylxxw.com/social-preview.png')); }
  catch(e) { if(e.code !== 'ENOENT') throw e; }
