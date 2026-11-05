@@ -14,10 +14,8 @@ export async function publicSite() {
       return structuredClone(sample);
     }
   }
-  const response = await fetch(`${url}/rest/v1/rpc/get_public_site`, {
-    method: "POST",
-    headers: { apikey: key, "Content-Type": "application/json" },
-    body: "{}",
+  const response = await fetch(`${import.meta.env.BASE_URL}site.json`, {
+    cache: "no-cache",
     signal: AbortSignal.timeout(10000),
   });
   if (!response.ok) throw Error("Public page unavailable");
