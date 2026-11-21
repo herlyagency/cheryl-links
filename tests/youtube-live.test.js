@@ -8,7 +8,7 @@ import {
   LIVE_LINK_ID,
 } from "../supabase/functions/_shared/youtube-live.js";
 import { sample, validateSite } from "../src/model.js";
-import { summarize } from "../src/analytics-summary.js";
+import { destinations } from "../src/analytics-summary.js";
 const broadcast = {
   id: "abcdefghijk",
   snippet: { channelId: CHANNEL_ID, title: "Streaming now" },
@@ -70,10 +70,11 @@ test("manual settings validate and live clicks have a readable analytics destina
   assert.doesNotThrow(() => validateSite(site));
   site.profile.liveUrl = "https://evil.com";
   assert.throws(() => validateSite(site), /YouTube/);
-  const summary = summarize(
-    [{ event_type: "link_click", link_id: LIVE_LINK_ID, visitor: "a" }],
+  const ranked = destinations(
+    [{ id: LIVE_LINK_ID, clicks: 1, unique: 1 }],
     sample,
+    1,
   );
-  assert.equal(summary.ranked[0].kind, "Live stream");
-  assert.equal(summary.ranked[0].title, "Watch Cheryl live");
+  assert.equal(ranked[0].kind, "Live stream");
+  assert.equal(ranked[0].title, "Watch Cheryl live");
 });

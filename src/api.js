@@ -71,7 +71,9 @@ export async function upload(file) {
   canvas.height = Math.max(1, Math.round(bitmap.height * scale));
   canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
   bitmap.close();
-  const compressed = await new Promise(resolve => canvas.toBlob(resolve, "image/webp", 0.82));
+  const compressed = await new Promise((resolve) =>
+    canvas.toBlob(resolve, "image/webp", 0.82),
+  );
   if (compressed && compressed.size < file.size) file = compressed;
   const path =
     crypto.randomUUID() +
@@ -85,6 +87,18 @@ export async function upload(file) {
   if (error) throw error;
   return db.storage.from("images").getPublicUrl(path).data.publicUrl;
 }
+/** Aggregated analytics computed in Postgres (no raw events leave the database). */
+export async function summaryStats(from, to, tz) {
+  if (!db) return null;
+  const { data, error } = await db.rpc("analytics_summary", {
+    p_from: from,
+    p_to: to,
+    p_tz: tz,
+  });
+  if (error) throw error;
+  return data;
+}
+/** Raw events, used only for the CSV export. */
 export async function stats(from, to) {
   if (!db) return { events: [], limited: false };
   const { data, error } = await db.rpc("analytics_report", {
