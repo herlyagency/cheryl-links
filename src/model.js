@@ -438,20 +438,36 @@ export function validateSite(site) {
   }
   return site;
 }
-export function attribution(referrer, search) {
+// In-app browsers (Instagram, TikTok, …) often send no referrer. Their User-Agent
+// still names the app, which is a better source than "Direct".
+const IN_APP = [
+  [/Instagram/, "instagram"],
+  [/FBAN|FBAV|FB_IAB/, "facebook"],
+  [/musical_ly|BytedanceWebview|TikTok/i, "tiktok"],
+  [/Snapchat/, "snapchat"],
+  [/Twitter/, "twitter"],
+  [/LinkedInApp/, "linkedin"],
+];
+export function attribution(referrer, search, ua = "") {
   const p = new URLSearchParams(search);
   let host = "";
   try {
     host = new URL(referrer).hostname;
   } catch {}
+  const app = IN_APP.find(([pattern]) => pattern.test(ua))?.[1] || "";
   return {
-    source: (p.get("utm_source") || host || "Direct / unknown").slice(0, 100),
+    source: (p.get("utm_source") || host || app || "Direct / unknown").slice(
+      0,
+      100,
+    ),
     medium: (p.get("utm_medium") || "").slice(0, 100),
     campaign: (p.get("utm_campaign") || "").slice(0, 100),
     referrer: host,
   };
 }
-export function deviceType(ua) {
+export function deviceType(ua, touchPoints = 0) {
+  // iPadOS Safari reports a desktop Mac User-Agent; only touch support gives it away.
+  if (/Macintosh/.test(ua) && touchPoints > 1) return "tablet";
   return /iPad|Tablet|Android(?!.*Mobile)/i.test(ua)
     ? "tablet"
     : /Mobile|iPhone/i.test(ua)

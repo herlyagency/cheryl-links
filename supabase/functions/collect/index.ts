@@ -10,6 +10,7 @@ Deno.serve(
     supabase,
     secret: Deno.env.get("ANALYTICS_SIGNING_SECRET") || "",
     turnstileSecret: Deno.env.get("TURNSTILE_SECRET_KEY") || "",
+    geoProxySecret: Deno.env.get("GEO_PROXY_SECRET") || "",
     origins: (
       Deno.env.get("ALLOWED_ORIGINS") ||
       "https://cherylxxw.com,https://www.cherylxxw.com"

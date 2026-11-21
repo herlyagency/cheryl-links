@@ -9,7 +9,16 @@ import Celebration from "./Celebration";
 import React, { useState, useEffect, useRef } from "react";
 import { Heart, Share2, Check, ArrowUpRight } from "lucide-react";
 import { safeUrl, visible, linkThumbnail, socialFollowerTotal } from "./model";
-import { enabled, optedIn, consent, startTracking, track } from "./analytics";
+import {
+  enabled,
+  blocked,
+  remembered,
+  remember,
+  startTracking,
+  track,
+  trackEngagement,
+  onRenew,
+} from "./analytics";
 import { SocialIcon as Icon } from "./social-icons";
 import { platformLabels as icons, resolvePlatform } from "./social-platforms";
 
@@ -51,7 +60,9 @@ function Turnstile() {
           sitekey: import.meta.env.VITE_TURNSTILE_SITE_KEY,
           callback: startTracking,
           theme: "light",
+          appearance: "interaction-only",
         });
+      onRenew(() => id !== undefined && window.turnstile?.reset(id));
     };
     if (window.turnstile) render();
     else {
@@ -66,8 +77,11 @@ function Turnstile() {
       }
       s.addEventListener("load", render, { once: true });
     }
+    const stopEngagement = trackEngagement();
     return () => {
       cancelled = true;
+      stopEngagement();
+      onRenew(null);
       if (id !== undefined) window.turnstile?.remove(id);
     };
   }, []);
@@ -76,14 +90,7 @@ function Turnstile() {
 function PublicPage({ site, preview = false }) {
   const { profile: p, theme: t, links, socials } = site;
   const followers = socialFollowerTotal(socials);
-  const [allow, setAllow] = useState(optedIn());
-  const [choice, setChoice] = useState(() => {
-    try {
-      return localStorage.getItem("cheryl-analytics-consent");
-    } catch {
-      return null;
-    }
-  });
+  const [rememberDevice, setRemember] = useState(remembered);
   const [shareMessage, setShareMessage] = useState("");
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
@@ -124,6 +131,7 @@ function PublicPage({ site, preview = false }) {
   }, [p.liveMode]);
   const live = visibleLive(p, liveResult);
   async function share() {
+    if (!preview) track("share");
     try {
       if (navigator.share)
         await navigator.share({
@@ -367,13 +375,13 @@ function PublicPage({ site, preview = false }) {
           {!preview && enabled && (
             <button
               onClick={() => {
-                const value = !allow;
-                consent(value);
-                setAllow(value);
-                setChoice(value ? "yes" : "no");
+                remember(!rememberDevice);
+                setRemember(!rememberDevice);
               }}
+              title="Anonymous visit counts never use cookies. Remembering this device lets returning visits be recognised."
             >
-              Analytics: {allow ? "allowed" : "off"} · change
+              Remember this device for visit stats:{" "}
+              {rememberDevice ? "on" : "off"}
             </button>
           )}
         </footer>
@@ -387,37 +395,7 @@ function PublicPage({ site, preview = false }) {
         Custom designs by Moowo Media
       </a>
       {shareMessage && <div className="toast">{shareMessage}</div>}
-      {!preview && enabled && !choice && (
-        <div className="consent">
-          <span>
-            Allow anonymous visits and click analytics? No tracking before you
-            allow it.
-          </span>
-          <button
-            onClick={() => {
-              consent(true);
-              setAllow(true);
-              setChoice("yes");
-            }}
-          >
-            Allow
-          </button>
-          <button
-            onClick={() => {
-              consent(false);
-              setAllow(false);
-              setChoice("no");
-            }}
-          >
-            Decline
-          </button>
-        </div>
-      )}
-      {!preview &&
-        enabled &&
-        allow &&
-        !navigator.globalPrivacyControl &&
-        navigator.doNotTrack !== "1" && <Turnstile />}
+      {!preview && enabled && !blocked() && <Turnstile />}
     </div>
   );
 }

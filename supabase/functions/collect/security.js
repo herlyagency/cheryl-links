@@ -58,12 +58,96 @@ export const uuid = (value) =>
   /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(
     value,
   );
+export { LIVE_LINK_ID } from "../_shared/youtube-live.js";
+const int = (value, min, max) =>
+  Number.isInteger(value) && value >= min && value <= max;
 export function validEvent(data) {
-  return (
-    uuid(data.event_id) &&
-    ((data.event_type === "page_view" && data.link_id == null) ||
-      (data.event_type === "link_click" && uuid(data.link_id)))
+  if (!uuid(data.event_id)) return false;
+  switch (data.event_type) {
+    case "page_view":
+    case "share":
+      return data.link_id == null;
+    case "link_click":
+      return uuid(data.link_id);
+    case "engagement":
+      return (
+        data.link_id == null &&
+        int(data.duration, 0, 1800) &&
+        int(data.scroll, 0, 100)
+      );
+    default:
+      return false;
+  }
+}
+/** A UUID-shaped ID derived from an HMAC, so it fits the visitor column. */
+export function hashUuid(hashed) {
+  const hex = [...unbase64(hashed)]
+    .slice(0, 16)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-${"89ab"[parseInt(hex[16], 16) % 4]}${hex.slice(17, 20)}-${hex.slice(20, 32)}`;
+}
+/** Coarse operating system and in-app browser, parsed from the User-Agent. */
+export function platform(ua = "") {
+  const os = /iPhone|iPad|iPod/.test(ua)
+    ? "iOS"
+    : /Android/.test(ua)
+      ? "Android"
+      : /Mac OS X|Macintosh/.test(ua)
+        ? "macOS"
+        : /Windows/.test(ua)
+          ? "Windows"
+          : /CrOS/.test(ua)
+            ? "ChromeOS"
+            : /Linux/.test(ua)
+              ? "Linux"
+              : "";
+  const app = /Instagram/.test(ua)
+    ? "Instagram"
+    : /FBAN|FBAV|FB_IAB/.test(ua)
+      ? "Facebook"
+      : /musical_ly|BytedanceWebview|TikTok/i.test(ua)
+        ? "TikTok"
+        : /Snapchat/.test(ua)
+          ? "Snapchat"
+          : /Twitter/.test(ua)
+            ? "X"
+            : /LinkedInApp/.test(ua)
+              ? "LinkedIn"
+              : /Edg\//.test(ua)
+                ? "Edge"
+                : /SamsungBrowser/.test(ua)
+                  ? "Samsung Internet"
+                  : /Firefox|FxiOS/.test(ua)
+                    ? "Firefox"
+                    : /CriOS|Chrome\//.test(ua)
+                      ? "Chrome"
+                      : /Safari\//.test(ua)
+                        ? "Safari"
+                        : "";
+  return { os, app };
+}
+/** Trusted geography: a shared-secret proxy (Cloudflare Worker) or Cloudflare's own country header. */
+export function geography(headers, proxySecret = "") {
+  const proxied = Boolean(
+    proxySecret && headers.get("x-geo-secret") === proxySecret,
   );
+  const raw = proxied
+    ? headers.get("x-geo-country")
+    : headers.get("cf-ipcountry");
+  const country =
+    raw && /^[A-Z]{2}$/.test(raw) && !["XX", "T1"].includes(raw) ? raw : null;
+  let city = null;
+  if (proxied && country) {
+    try {
+      city =
+        clean(decodeURIComponent(headers.get("x-geo-city") || ""), 80) || null;
+    } catch {}
+  }
+  const ip = proxied
+    ? headers.get("x-client-ip") || "unknown"
+    : headers.get("x-forwarded-for")?.split(",")[0].trim() || "unknown";
+  return { country, city, ip, proxied };
 }
 export function clean(value, length = 100) {
   return typeof value === "string"

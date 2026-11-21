@@ -28,8 +28,11 @@ The source uses realistic sample copy, platform homepages, a monogram avatar, an
 - `site_drafts` and `site_published` each hold one validated JSON document with `profile`, `theme`, ordered `links`, and ordered `socials`. For a bounded single-user site, this is simpler than synchronized profile/link/theme tables. SQL validates document size, link count, UUIDs, URLs, styles, and schedules. Publishing atomically copies the entire draft. Draft saves never leak to visitors.
 - Hidden, future, and expired links are removed server-side by the public RPC. Every new visit sees published changes; an already open page refreshes configuration every 60 seconds and checks schedules locally every 30 seconds.
 - Uploaded images live in a public Storage bucket. Only the owner can upload, list, or delete. Do not upload private images. PNG/JPEG/WebP only, 3 MB limit; the editor decodes uploads and caps dimensions at 4096 px. Remove unused files from the Storage dashboard when needed.
-- Analytics go through a public Edge Function that validates Cloudflare Turnstile, signs a short-lived session, validates event IDs and active destinations, limits requests, and inserts with the server-only service role. No public insert policy or public collector RPC exists.
-- Raw IPs are not saved. A server-keyed hash rotated daily is used only in two-day limiter buckets. Referrers are hostname-only. Country is **unknown**, because GitHub Pages does not provide trusted geographic data to this collector. Never infer it from language/timezone or accept an arbitrary country from a visitor. If geography is essential, add a trusted proxy/provider and validate its server-side country header, or use Cloudflare Web Analytics separately.
+- Analytics go through a public Edge Function that validates Cloudflare Turnstile, signs a short-lived session, validates event IDs and active destinations, limits requests, and inserts with the server-only service role. No public insert policy or public collector RPC exists. The admin dashboard reads only aggregates from the owner-only `analytics_summary()` RPC; raw events leave the database only for the CSV export.
+- **Cookieless counting.** Every visit is counted without cookies or browser storage: the collector derives a visitor ID from an HMAC of the day, IP and User-Agent, which lasts one UTC day and cannot be reversed. Raw IPs are never saved. Visitors who tap **Remember this device** in the page footer get a stored random ID so returning visits can be recognised. GPC and Do Not Track disable all collection. Referrers are hostname-only.
+- **What is collected per event:** type (`page_view`, `link_click`, `share`, `engagement`), destination, source/UTM tags, referrer host, device class, OS, in-app browser or browser name, primary language, engaged seconds and scroll depth (engagement events only), and country/city when a trusted source provides them.
+- **Location.** Country comes from Cloudflare's `cf-ipcountry` header when the request passes through Cloudflare. For cities, deploy the optional Worker in [docs/geo-proxy.md](docs/geo-proxy.md). Location is never inferred from language or time zone, and a visitor can't supply it.
+- **Daily caps** (20,000 sessions / 60,000 requests) protect the free tier. Every refusal is counted as `dropped`, and the dashboard warns when any happen.
 
 ## 1. Configure Supabase
 
@@ -56,7 +59,7 @@ There can be only one owner row. To deliberately change ownership later, use SQL
 Leave `VITE_ANALYTICS_ENABLED=false` until setup and privacy review are complete. Link management works without analytics.
 
 1. Create a free Cloudflare **Turnstile** widget in Managed mode. Add `cherylxxw.com` and `www.cherylxxw.com`. Cloudflare does not need to host your website or DNS for this widget.
-2. Set `VITE_TURNSTILE_SITE_KEY` in `.env` and repository variables. This key is public. The visitor explicitly opts in before the widget or collector is loaded. GPC and Do Not Track suppress collection.
+2. Set `VITE_TURNSTILE_SITE_KEY` in `.env` and repository variables. This key is public. Turnstile runs in Managed mode with `interaction-only` appearance, so most visitors never see it. GPC and Do Not Track suppress collection.
 3. Use Supabase’s Edge Functions deployment workflow or CLI to deploy `supabase/functions/collect`. With the CLI, link your project from this repository, set secrets, then:
 
 ```sh
@@ -75,7 +78,7 @@ Set these function secrets through the Supabase dashboard/secret manager (keep t
 
 Supabase supplies `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` to deployed functions. For local verification, use a separate test project, the documented Turnstile test keys, and explicitly allowed localhost origins; never deploy test keys to production.
 
-4. Set `VITE_ANALYTICS_ENABLED=true` and rebuild. Allow analytics on the public page, complete Turnstile if it asks, visit a tagged URL, click a link, and check `/admin → Analytics`.
+4. Set `VITE_ANALYTICS_ENABLED=true` and rebuild. Open the public page, complete Turnstile if it asks, visit a tagged URL, click a link, and check `/admin → Analytics`.
 5. Use tagged social links such as `https://cherylxxw.com/?utm_source=instagram&utm_medium=bio`. UTM source wins over the referral hostname; missing attribution is `Direct / unknown`.
 
 ### Reliability and abuse limits
