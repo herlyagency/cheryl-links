@@ -13,6 +13,8 @@ import { enabled, optedIn, consent, startTracking, track } from "./analytics";
 import { SocialIcon as Icon } from "./social-icons";
 import { platformLabels as icons, resolvePlatform } from "./social-platforms";
 
+const LIVE_POLL_MS = 180000;
+
 function LinkImage({ src, icon, url, hero = false }) {
   const [failed, setFailed] = useState(false);
   if (failed || !src)
@@ -101,15 +103,23 @@ function PublicPage({ site, preview = false }) {
       setLiveResult(null);
       return;
     }
-    const load = () =>
+    // The server re-checks YouTube at most every 3 minutes, so polling faster only
+    // spends Supabase Edge Function invocations. Background tabs don't poll at all.
+    let last = 0;
+    const load = () => {
+      if (document.hidden || Date.now() - last < LIVE_POLL_MS - 1000) return;
+      last = Date.now();
       youtubeLiveStatus()
         .then((result) => alive && setLiveResult(result))
         .catch(() => alive && setLiveResult({ status: "unknown" }));
+    };
     load();
-    const timer = setInterval(load, 60000);
+    const timer = setInterval(load, LIVE_POLL_MS);
+    document.addEventListener("visibilitychange", load);
     return () => {
       alive = false;
       clearInterval(timer);
+      document.removeEventListener("visibilitychange", load);
     };
   }, [p.liveMode]);
   const live = visibleLive(p, liveResult);
