@@ -2,7 +2,10 @@ import { sample } from "./model";
 const url = import.meta.env.VITE_SUPABASE_URL,
   key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 export const configured = Boolean(url && key);
-export const endpoint = configured ? `${url}/functions/v1/collect` : "";
+// The collector URL can point at the optional location proxy (docs/geo-proxy.md).
+export const endpoint = configured
+  ? import.meta.env.VITE_ANALYTICS_ENDPOINT || `${url}/functions/v1/collect`
+  : "";
 export async function publicSite() {
   if (!configured) {
     try {

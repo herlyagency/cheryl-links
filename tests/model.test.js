@@ -4,6 +4,7 @@ import {
   safeUrl,
   visible,
   attribution,
+  deviceType,
   csv,
   validateSite,
   sample,
@@ -49,6 +50,35 @@ test("attribution prioritizes explicit UTM and never invents a source", () => {
     attribution("https://google.com/", "?utm_source=tiktok&utm_medium=bio")
       .source,
     "tiktok",
+  );
+});
+test("attribution falls back to the in-app browser when the referrer is missing", () => {
+  const ig =
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) Mobile/22B83 Instagram 356.0";
+  assert.equal(attribution("", "", ig).source, "instagram");
+  assert.equal(attribution("https://t.co/", "", ig).source, "t.co");
+  assert.equal(attribution("", "?utm_source=qr", ig).source, "qr");
+  assert.equal(
+    attribution(
+      "",
+      "",
+      "Mozilla/5.0 (Linux; Android 14) BytedanceWebview/d8a21c6",
+    ).source,
+    "tiktok",
+  );
+  assert.equal(
+    attribution("", "", "Mozilla/5.0 Safari/605").source,
+    "Direct / unknown",
+  );
+});
+test("device type detects iPadOS posing as a Mac", () => {
+  const mac =
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Version/18.1 Safari/605.1.15";
+  assert.equal(deviceType(mac, 0), "desktop");
+  assert.equal(deviceType(mac, 5), "tablet");
+  assert.equal(
+    deviceType("Mozilla/5.0 (iPhone; CPU iPhone OS 18_1) Mobile/22B83"),
+    "mobile",
   );
 });
 test("CSV escapes quotes, delimiters, and spreadsheet formulas", () => {
