@@ -69,6 +69,20 @@ test("source rows merge aliases, keep the most common host and colour by source"
   assert.equal(sourceColor("__proto__"), OTHER_COLOR);
   assert.equal(sourceLabel(""), DIRECT);
   assert.equal(sourceLabel("link.me"), "Linkme");
+  assert.equal(
+    sourceLabel("com.google.android.googlequicksearchbox"),
+    "Google",
+  );
+  assert.equal(sourceLabel("www.cherylxxw.com"), DIRECT);
+  assert.equal(sourceLabel("cherylxxw.com"), DIRECT);
+  const own = sourceRows([
+    { source: "cherylxxw.com", host: "cherylxxw.com", count: 2 },
+    { source: "Direct / unknown", host: "", count: 3 },
+  ]);
+  assert.deepEqual(
+    own.map((r) => [r.label, r.count]),
+    [[DIRECT, 5]],
+  );
 });
 test("comparisons use equal periods and handle zero baselines and unavailable data", () => {
   const range = previousRange("2026-10-11T00:00:00Z", "2026-10-11T12:00:00Z");

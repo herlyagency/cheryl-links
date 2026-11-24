@@ -31,6 +31,14 @@ const SOURCE_NAMES = {
   google: "Google",
   "google.com": "Google",
   "com.google.android.gm": "Gmail",
+  "com.google.android.googlequicksearchbox": "Google",
+  googlequicksearchbox: "Google",
+  "com.google.android.apps.searchlite": "Google",
+  "com.instagram.android": "Instagram",
+  "com.facebook.katana": "Facebook",
+  "com.zhiliaoapp.musically": "TikTok",
+  "com.snapchat.android": "Snapchat",
+  "com.reddit.frontpage": "Reddit",
   linkedin: "LinkedIn",
   "linkedin.com": "LinkedIn",
   reddit: "Reddit",
@@ -39,11 +47,14 @@ const SOURCE_NAMES = {
   qr: "QR code",
 };
 export const DIRECT = "Direct / unknown";
+const OWN_HOSTS = new Set(["cherylxxw.com"]);
 export function sourceLabel(source) {
   const value = String(source || "").trim();
   if (!value || /^(direct|unknown|direct \/ unknown)$/i.test(value))
     return DIRECT;
   const normalized = value.toLowerCase().replace(/^www\./, "");
+  // Arriving from Cheryl's own site (reloads, internal links) is not a traffic source.
+  if (OWN_HOSTS.has(normalized)) return DIRECT;
   return Object.hasOwn(SOURCE_NAMES, normalized)
     ? SOURCE_NAMES[normalized]
     : value;
@@ -78,7 +89,10 @@ export function sourceRows(rows = []) {
   return [...merged.values()]
     .map(({ hosts, ...row }) => ({
       ...row,
-      host: [...hosts].sort((a, b) => b[1] - a[1])[0]?.[0] || "",
+      host:
+        row.label === DIRECT
+          ? ""
+          : [...hosts].sort((a, b) => b[1] - a[1])[0]?.[0] || "",
       color: sourceColor(row.label),
     }))
     .sort((a, b) => b.count - a.count);
